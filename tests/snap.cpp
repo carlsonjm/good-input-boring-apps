@@ -4,7 +4,8 @@
 // Steps: open, select (double tap the first word), style (open Aa), home,
 // gap (where the first page meets the second), cell (B4 chosen), page (Aa's
 // Page side), find (looking for \"the\"), more (the More menu), range (B2:B4
-// chosen), cells (B2:C4 chosen with Aa open).
+// chosen), cells (B2:C4 chosen with Aa open), box (a slide's title chosen),
+// slideaa (Aa in Slides), present (the slide full screen).
 #include "Engine.h"
 #include "OfficeDocument.h"
 
@@ -82,6 +83,21 @@ int main(int argc, char *argv[])
                 doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("B2:C4")}});
                 doc->settle(300);
                 window->setProperty("styleOpen", true);
+            } else if (step == QLatin1String("box")) {
+                // Taps the middle of the slide's title box.
+                doc->tap(doc->size().width() / 2, doc->size().height() * 0.16, 1);
+                doc->settle(300);
+            } else if (step == QLatin1String("slideaa")) {
+                window->setProperty("styleOpen", true);
+            } else if (step == QLatin1String("present")) {
+                QMetaObject::invokeMethod(window->findChild<QObject *>(QStringLiteral("presenter")), "start");
+                QTest::qWait(1500);
+                for (QQuickWindow *shown : window->findChildren<QQuickWindow *>()) {
+                    if (shown->isVisible()) {
+                        window = shown;
+                        break;
+                    }
+                }
             } else if (step == QLatin1String("cell")) {
                 doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("B4")}});
                 doc->settle(300);

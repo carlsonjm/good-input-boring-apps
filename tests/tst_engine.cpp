@@ -200,6 +200,32 @@ private Q_SLOTS:
         QCOMPARE(doc.currentPart(), 2);
     }
 
+    void slidesTools()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("deck.pptx"))));
+        // A tap on the title box chooses it.
+        doc.tap(doc.size().width() / 2, doc.size().height() * 0.16, 1);
+        QTRY_VERIFY_WITH_TIMEOUT(doc.hasObject(), 3000);
+        doc.command(QStringLiteral(".uno:DuplicatePage"));
+        doc.settle(300);
+        QCOMPARE(doc.parts(), 4);
+        doc.command(QStringLiteral(".uno:AssignLayout"), {{QStringLiteral("WhatLayout"), 3}});
+        doc.command(QStringLiteral(".uno:BasicShapes.round-rectangle"), {{QStringLiteral("KeyModifier"), 8192}});
+        doc.settle(300);
+        QVERIFY(doc.hasObject());
+        const QString path = m_dir.filePath(QStringLiteral("deck.fodp"));
+        QVERIFY(doc.saveCopy(QUrl::fromLocalFile(path), QStringLiteral("fodp")));
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const QByteArray saved = file.readAll();
+        QVERIFY(saved.contains("presentation:presentation-page-layout-name=\"AL"));
+        QVERIFY(saved.contains("draw:type=\"round-rectangle\""));
+        doc.command(QStringLiteral(".uno:DeletePage"));
+        doc.settle(300);
+        QCOMPARE(doc.parts(), 3);
+    }
+
     void drawsAPicture()
     {
         OfficeDocument doc;

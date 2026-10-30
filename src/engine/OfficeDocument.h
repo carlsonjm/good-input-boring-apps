@@ -51,6 +51,9 @@ class OfficeDocument : public QObject
     Q_PROPERTY(QVariantMap states READ states NOTIFY statesChanged)
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY statesChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY statesChanged)
+    // The shape, picture or text box chosen on a slide, in twips; empty if none.
+    Q_PROPERTY(QRectF objectRect READ objectRect NOTIFY objectChanged)
+    Q_PROPERTY(bool hasObject READ hasObject NOTIFY objectChanged)
     // Every place the last search found, in twips, and how many there were.
     Q_PROPERTY(QVariantList searchRects READ searchRects NOTIFY searchChanged)
     Q_PROPERTY(int searchCount READ searchCount NOTIFY searchChanged)
@@ -92,6 +95,8 @@ public:
     QVariantMap states() const { return m_states; }
     bool canUndo() const;
     QVariantList searchRects() const;
+    QRectF objectRect() const { return m_object; }
+    bool hasObject() const { return !m_object.isEmpty(); }
     int searchCount() const { return m_searchCount; }
     bool canRedo() const;
 
@@ -180,6 +185,7 @@ Q_SIGNALS:
     void cellChanged();
     void statesChanged();
     void searchChanged();
+    void objectChanged();
     // An area must be drawn again; an empty area means everything.
     void invalidated(const QRectF &area, int part);
     void saved();
@@ -217,6 +223,7 @@ private:
     QString m_cellFormula;
     QVariantMap m_states;
     QList<QRectF> m_searchRects;
+    QRectF m_object;
     int m_searchCount = 0;
     QTimer m_autosaveTimer;
     std::shared_ptr<DocumentLink> m_link;

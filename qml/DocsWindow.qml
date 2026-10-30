@@ -121,7 +121,7 @@ ApplicationWindow {
             anchors.right: parent.right
             document: doc
             styleOpen: window.styleOpen
-            showStyle: window.kind === "text" || window.kind === "spreadsheet"
+            showStyle: true
             onBack: window.closeDocument()
             onStyleRequested: window.styleOpen = !window.styleOpen
             onMoreRequested: (anchor) => moreMenu.popup(anchor, 0, anchor.height + Theme.tight)
@@ -207,45 +207,103 @@ ApplicationWindow {
             id: slideStrip
             visible: window.kind === "presentation" && doc.parts > 0
             anchors.top: topLine.bottom
-            anchors.bottom: parent.bottom
+            anchors.topMargin: Theme.compact
+            anchors.bottom: newSlide.top
+            anchors.bottomMargin: Theme.standard
             anchors.left: parent.left
-            anchors.leftMargin: Theme.surface
-            width: visible ? 196 : 0
+            anchors.leftMargin: 20
+            width: visible ? 184 : 0
             spacing: 14
             clip: true
             // Only Slides draws its strip; elsewhere the parts are sheets or pages.
             model: window.kind === "presentation" ? doc.parts : 0
-            footer: Pill { x: 22; y: 14; width: 160; raised: true; label: qsTr("New slide"); onClicked: doc.command(".uno:InsertPage") }
+            header: Item { width: 1; height: 4 }
             delegate: AbstractButton {
                 id: slideButton
                 required property int index
-                width: 196; height: 90
+                readonly property bool current: doc.currentPart === index
+                width: 184
+                height: thumb.height
                 onClicked: doc.setPart(index)
                 contentItem: Item {
-                    Text { text: slideButton.index + 1; color: Theme.secondary; font.pixelSize: 12; width: 14; horizontalAlignment: Text.AlignRight; y: 4 }
+                    Text {
+                        text: slideButton.index + 1
+                        color: slideButton.current ? Theme.text : Theme.secondary
+                        font.pixelSize: 12
+                        width: 16
+                        horizontalAlignment: Text.AlignRight
+                        y: 2
+                    }
+                    // The ring sits just outside the slide, with a little desk between.
                     Rectangle {
+                        visible: slideButton.current
+                        anchors.fill: thumb
+                        anchors.margins: -5
+                        radius: Theme.paperRadius + 5
+                        color: "transparent"
+                        border.width: 3
+                        border.color: Theme.accent
+                    }
+                    Item {
                         id: thumb
-                        x: 22; width: 160; height: 90
-                        radius: Theme.paperRadius
-                        color: "white"
-                        clip: true
+                        x: 28
+                        width: 150
+                        height: doc.size.width > 0 ? Math.round(width * doc.size.height / doc.size.width) : 84
+                        Rectangle { anchors.fill: parent; color: "white" }
                         PageView {
                             anchors.fill: parent
                             document: doc
                             part: slideButton.index
-                            zoom: doc.size.width > 0 ? Math.min(160 / doc.size.width, 90 / doc.size.height) : 0.01
+                            zoom: doc.size.width > 0 ? thumb.width / doc.size.width : 0.01
                             enabled: false
                         }
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Theme.paperRadius
-                            color: "transparent"
-                            border.width: doc.currentPart === slideButton.index ? 3 : 0
-                            border.color: Theme.accent
-                        }
+                        Corners { anchors.fill: parent; radius: 8 }
+                        Rectangle { anchors.fill: parent; radius: 8; color: "transparent"; border.width: 1.5; border.color: Theme.desk }
                     }
                 }
             }
+            onCountChanged: positionViewAtIndex(doc.currentPart, ListView.Contain)
+            Connections {
+                target: doc
+                function onPartsChanged() { slideStrip.positionViewAtIndex(doc.currentPart, ListView.Contain) }
+            }
+        }
+
+        Pill {
+            id: newSlide
+            visible: window.kind === "presentation"
+            anchors.left: parent.left
+            anchors.leftMargin: 44
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 20
+            raised: true
+            glyph: "plus"
+            label: qsTr("New slide")
+            onClicked: doc.command(".uno:InsertPage")
+        }
+
+        Text {
+            visible: window.kind === "presentation" && doc.parts > 0
+            anchors.right: parent.right
+            anchors.rightMargin: 28
+            anchors.top: topLine.bottom
+            anchors.topMargin: Theme.compact
+            text: qsTr("%1 of %2").arg(doc.currentPart + 1).arg(doc.parts)
+            color: Theme.secondary
+            font.pixelSize: Theme.metaSize
+        }
+
+        SlideBar {
+            id: slideBar
+            visible: window.kind === "presentation" && doc.hasObject && !window.styleOpen && !presenter.running
+            document: doc
+            readonly property rect box: paper.viewRect(doc.objectRect)
+            x: Math.max(Theme.comfortable, Math.min(parent.width - width - Theme.comfortable, paper.x + box.x + box.width / 2 - width / 2))
+            y: {
+                const below = paper.y + box.y + box.height + 20
+                return below + height < parent.height - Theme.comfortable ? below : Math.max(topLine.height, paper.y + box.y - height - 20)
+            }
+            onDone: paper.focusPage()
         }
 
         // Sheets: the sheets of the file as pills along the bottom, and what
@@ -351,6 +409,15 @@ ApplicationWindow {
             onDone: paper.focusPage()
         }
 
+        SlideSheet {
+            visible: window.styleOpen && window.kind === "presentation"
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.comfortable
+            y: topLine.height
+            document: doc
+            onDone: { window.styleOpen = false; paper.focusPage() }
+        }
+
         CellSheet {
             visible: window.styleOpen && window.kind === "spreadsheet"
             anchors.right: parent.right
@@ -448,31 +515,9 @@ ApplicationWindow {
         }
     }
 
-    // Slides: the deck full screen, one slide at a time.
-    Window {
+    Presenter {
         id: presenter
-        color: "black"
-        visibility: Window.Hidden
-        function start() { visibility = Window.FullScreen; requestActivate(); stage.forceActiveFocus() }
-        function stop() { visibility = Window.Hidden }
-        Paper {
-            id: stage
-            anchors.fill: parent
-            document: presenter.visibility !== Window.Hidden ? doc : null
-            fit: "screen"
-            interactive: false
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) presenter.stop()
-                else if (event.key === Qt.Key_Right || event.key === Qt.Key_Space || event.key === Qt.Key_PageDown) doc.setPart(Math.min(doc.parts - 1, doc.currentPart + 1))
-                else if (event.key === Qt.Key_Left || event.key === Qt.Key_PageUp) doc.setPart(Math.max(0, doc.currentPart - 1))
-            }
-            TapHandler {
-                onTapped: (point) => {
-                    if (point.position.x < stage.width / 3) doc.setPart(Math.max(0, doc.currentPart - 1))
-                    else if (doc.currentPart + 1 < doc.parts) doc.setPart(doc.currentPart + 1)
-                    else presenter.stop()
-                }
-            }
-        }
+        objectName: "presenter"
+        document: doc
     }
 }

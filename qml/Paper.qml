@@ -18,6 +18,8 @@ Item {
     property bool interactive: true
     // Widest the page is drawn, in pixels, whatever the window.
     property real maxPageWidth: 860
+    // What the paper lies on, for rounding its corners into it.
+    property color ground: Theme.desk
     readonly property alias view: view
     // Where the window onto the document is, for drawing beside it.
     readonly property alias scrollX: flick.contentX
@@ -147,7 +149,7 @@ Item {
     Item {
         anchors.fill: parent
         clip: true
-        visible: paper.fit !== "screen" && paper.fit !== "actual"
+        visible: paper.fit !== "actual"
         Repeater {
             model: {
                 const doc = paper.document
@@ -165,7 +167,17 @@ Item {
                 x: Math.floor(at.x); y: Math.floor(at.y)
                 width: Math.ceil(at.x + at.width) + 1 - x
                 height: Math.ceil(at.y + at.height) + 1 - y
-                Corners { anchors.fill: parent }
+                // Full screen, a slide keeps square corners.
+                Corners { visible: paper.fit !== "screen"; anchors.fill: parent; ground: paper.ground }
+                // Trims the engine's own thin outline round a slide.
+                Rectangle {
+                    visible: paper.document && paper.document.kind === OfficeDocument.Presentation
+                    anchors.fill: parent
+                    radius: paper.fit === "screen" ? 0 : Theme.paperRadius
+                    color: "transparent"
+                    border.width: 2
+                    border.color: paper.ground
+                }
             }
         }
     }
@@ -207,6 +219,35 @@ Item {
             width: 12; height: 12; radius: 6
             color: Theme.accent
             x: parent.width - 6; y: parent.height - 6
+        }
+    }
+
+    // Slides: the chosen box, framed in the accent with a pearl at each
+    // corner and side.
+    Item {
+        id: box
+        readonly property rect at: paper.interactive && paper.document && paper.document.hasObject
+            ? paper.viewRect(paper.document.objectRect) : Qt.rect(0, 0, 0, 0)
+        visible: at.width > 0
+        x: at.x; y: at.y; width: at.width; height: at.height
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -1
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.accent
+        }
+        Repeater {
+            model: [[0, 0], [0.5, 0], [1, 0], [0, 0.5], [1, 0.5], [0, 1], [0.5, 1], [1, 1]]
+            Rectangle {
+                required property var modelData
+                width: 14; height: 14; radius: 7
+                x: box.width * modelData[0] - 7
+                y: box.height * modelData[1] - 7
+                color: Theme.accent
+                border.width: 2
+                border.color: "white"
+            }
         }
     }
 

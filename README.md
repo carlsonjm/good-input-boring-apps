@@ -38,3 +38,8 @@ Install with CMake as usual; `good-input-office --docs`, `--sheets` or
 `--slides` starts each app, and `data/` has their launchers.
 `GOODINPUT_OFFICE_LIBREOFFICE` points the program at a LibreOffice installed
 somewhere other than `/usr/lib/libreoffice/program`.
+
+## Licence
+
+GPL-2.0-or-later, like the rest of the Shuffle suite; see `LICENSE`. The
+program is still called `good-input-office`; this repository holds it.

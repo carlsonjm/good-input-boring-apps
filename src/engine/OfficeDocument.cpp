@@ -200,6 +200,7 @@ void OfficeDocument::close()
     m_states.clear();
     m_searchRects.clear();
     m_searchCount = 0;
+    m_object = {};
     setStatus(Empty);
 }
 
@@ -389,6 +390,17 @@ void OfficeDocument::engineEvent(int type, const QByteArray &payload)
         m_cellAddress = QString::fromUtf8(payload);
         Q_EMIT cellChanged();
         break;
+    case LOK_CALLBACK_GRAPHIC_SELECTION: {
+        QRectF rect;
+        if (!payload.startsWith("EMPTY")) {
+            parseRect(payload, &rect);
+        }
+        if (rect != m_object) {
+            m_object = rect;
+            Q_EMIT objectChanged();
+        }
+        break;
+    }
     case LOK_CALLBACK_SEARCH_RESULT_SELECTION: {
         // Stepping to one place reports just that place; only a search for
         // every place says how many there are.

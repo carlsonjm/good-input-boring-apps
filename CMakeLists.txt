@@ -59,6 +59,9 @@ qt_add_qml_module(office-screens
         qml/SheetHeaders.qml
         qml/SheetBar.qml
         qml/CellSheet.qml
+        qml/SlideBar.qml
+        qml/SlideSheet.qml
+        qml/Presenter.qml
     RESOURCES
         qml/icons/chevron-left.svg
         qml/icons/undo-2.svg
@@ -80,6 +83,8 @@ qt_add_qml_module(office-screens
         qml/icons/arrow-down-a-z.svg
         qml/icons/arrow-down.svg
         qml/icons/align-right.svg
+        qml/icons/layers.svg
+        qml/icons/trash-2.svg
         qml/icons/ink/chevron-left.svg
         qml/icons/ink/undo-2.svg
         qml/icons/ink/redo-2.svg
@@ -100,6 +105,8 @@ qt_add_qml_module(office-screens
         qml/icons/ink/arrow-down-a-z.svg
         qml/icons/ink/arrow-down.svg
         qml/icons/ink/align-right.svg
+        qml/icons/ink/layers.svg
+        qml/icons/ink/trash-2.svg
 )
 # The ready-made sheets Sheets offers to start from (tools/make-templates.sh).
 qt_add_resources(office-screens "templates"
