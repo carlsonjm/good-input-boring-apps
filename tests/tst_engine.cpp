@@ -281,7 +281,9 @@ private Q_SLOTS:
         doc.command(QStringLiteral(".uno:GoToStartOfDoc"));
         // Letter, sideways: 11 by 8.5 inches, in hundredths of a millimetre.
         doc.command(QStringLiteral(".uno:AttributePageSize"), {{QStringLiteral("AttributePageSize.Width"), 27940}, {QStringLiteral("AttributePageSize.Height"), 21590}});
-        doc.command(QStringLiteral(".uno:PageLRMargin"), {{QStringLiteral("PageLRMargin.Left"), 1270}, {QStringLiteral("PageLRMargin.Right"), 1270}});
+        // The margin names as Aa sends them: both the old and the new engine's.
+        doc.command(QStringLiteral(".uno:PageLRMargin"), {{QStringLiteral("PageLRMargin.Left"), 1270}, {QStringLiteral("PageLRMargin.Right"), 1270},
+                                                          {QStringLiteral("Page.Left"), 1270}, {QStringLiteral("Page.Right"), 1270}});
         doc.settle(300);
         doc.addPageNumbers(QStringLiteral("bottom-middle"));
         doc.typeText(QStringLiteral("Back in the text."));

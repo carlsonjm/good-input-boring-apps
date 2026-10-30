@@ -53,9 +53,13 @@ Rectangle {
             : { "AttributePageSize.Width": shrt, "AttributePageSize.Height": lng })
         document.command(".uno:AttributePage", { "AttributePage.Landscape": toSideways })
     }
+    // Engines up to 24.x name the margins after the command; later ones name
+    // them "Page". Each ignores the names it does not know, so both are sent.
     function setMargins(hundredths) {
-        document.command(".uno:PageLRMargin", { "PageLRMargin.Left": hundredths, "PageLRMargin.Right": hundredths })
-        document.command(".uno:PageULMargin", { "PageULMargin.Upper": hundredths, "PageULMargin.Lower": hundredths })
+        document.command(".uno:PageLRMargin", { "PageLRMargin.Left": hundredths, "PageLRMargin.Right": hundredths,
+                                                 "Page.Left": hundredths, "Page.Right": hundredths })
+        document.command(".uno:PageULMargin", { "PageULMargin.Upper": hundredths, "PageULMargin.Lower": hundredths,
+                                                 "Page.Upper": hundredths, "Page.Lower": hundredths })
     }
     // Within a few twips, for paper that came from another program.
     function near(a, b) { return Math.abs(a - b) < 60 }
