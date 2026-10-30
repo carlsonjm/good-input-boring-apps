@@ -4,6 +4,7 @@
 
 #include <QFile>
 #include <QGuiApplication>
+#include <QRegularExpression>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -291,7 +292,19 @@ private Q_SLOTS:
         QVERIFY(saved.contains("text:note-class=\"footnote\""));
         QVERIFY(saved.contains("fo:page-width=\"11in\""));
         QVERIFY(saved.contains("fo:page-height=\"8.5in\""));
-        QVERIFY(saved.contains("fo:margin-left=\"0.5in\""));
+        // Engines write the margin in their own unit and rounding; any page
+        // layout with a left margin of half an inch passes.
+        const QString text = QString::fromUtf8(saved);
+        const QRegularExpression layout(QStringLiteral("<style:page-layout-properties[^>]*fo:margin-left=\"([0-9.]+)(in|cm|mm)\"[^>]*>"));
+        bool halfInch = false;
+        QStringList seen;
+        for (auto it = layout.globalMatch(text); it.hasNext();) {
+            const auto m = it.next();
+            const double unit = m.captured(2) == QLatin1String("in") ? 1.0 : m.captured(2) == QLatin1String("cm") ? 2.54 : 25.4;
+            halfInch = halfInch || qAbs(m.captured(1).toDouble() / unit - 0.5) < 0.01;
+            seen << m.captured(1) + m.captured(2);
+        }
+        QVERIFY2(halfInch, qPrintable(QStringLiteral("page left margins: ") + seen.join(QStringLiteral(", "))));
         const int footer = saved.indexOf("<style:footer>");
         QVERIFY(footer > 0);
         QVERIFY(saved.indexOf("<text:page-number", footer) > footer);
