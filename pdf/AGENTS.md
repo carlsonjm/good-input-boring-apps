@@ -1,6 +1,8 @@
 # Agent instructions
 
-Applies to the whole repository. `README.md` says how to build and check it;
+Applies to `pdf/`, the PDF app, beside Docs, Sheets and Slides in this
+repository; it builds and ships on its own. `pdf/README.md` says how to build
+and check it;
 `docs/PDF-CONTRACT.md` says what each part promises.
 
 ## Working rules

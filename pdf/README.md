@@ -10,7 +10,9 @@ you reach for it. It does the four things people do with paper:
 - **Highlight**: four colours, saved as standard PDF marks any reader shows.
 
 It is one of the Good Input Basics, published on Flathub as `co.goodinput.PDF`,
-and runs the same on any desktop.
+and runs the same on any desktop. It lives in `pdf/` beside Docs, Sheets and
+Slides and shares nothing with them at build time: its own CMake project, its
+own check (`.github/workflows/pdf.yml`) and its own Flathub manifest.
 
 ## State
 
@@ -37,7 +39,7 @@ Needs CMake, Qt 6.4 or newer (Core, Gui, Quick, Svg, Test, and the Quick Dialogs
 24.02 or newer.
 
 ```sh
-./verify.sh
+cd pdf && ./verify.sh
 ```
 
 It rebuilds the test PDFs from `tools/make-fixtures.py`, builds, runs the tests
@@ -47,5 +49,6 @@ installed.
 
 ## Licence
 
-GPL-2.0-or-later, as Poppler, which draws the pages, requires. Whoever receives
+GPL-2.0-or-later, as Poppler, which draws the pages, requires; see the
+repository's `LICENSE`. Whoever receives
 a build is entitled to its source.

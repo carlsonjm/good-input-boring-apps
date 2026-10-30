@@ -1,26 +1,26 @@
-name: Arch current
+name: PDF on Arch current
 
-# Builds and checks Good Input PDF against Arch Linux's current Qt and Poppler,
+# Builds and checks Good Input PDF (pdf/) against Arch Linux's current Qt and Poppler,
 # so an update that breaks the build shows here before it reaches a device.
 on:
+  # Only a change to the PDF app, or to this file, runs it; Markdown alone runs nothing.
   pull_request:
-    # A Markdown-only change runs no build.
-    paths-ignore: ['**.md']
+    paths: ['pdf/**', '!pdf/**.md', '.github/workflows/pdf.yml']
   push:
     branches: [main]
-    paths-ignore: ['**.md']
+    paths: ['pdf/**', '!pdf/**.md', '.github/workflows/pdf.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: arch-current-${{ github.ref }}
+  group: pdf-arch-current-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   verify:
-    name: Arch current
+    name: PDF on Arch current
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/archlinux/archlinux:latest
@@ -43,11 +43,11 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          ./verify.sh
+          cd pdf && ./verify.sh
 
       - name: Keep the screens drawn
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: screens
-          path: build/screens/
+          name: pdf-screens
+          path: pdf/build/screens/
