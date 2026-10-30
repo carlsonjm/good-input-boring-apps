@@ -14,6 +14,8 @@ Item {
 
     signal openRequested(url url)
     signal newRequested()
+    // A ready-made file to start from, by name, and what to call the copy.
+    signal templateRequested(string name, string title)
 
     function refresh() { recent.reload() }
 
@@ -56,6 +58,69 @@ Item {
             }
         }
         Item { width: 1; height: Theme.comfortable }
+
+        // Sheets: ready-made sheets to start from.
+        Text {
+            visible: home.kind === "spreadsheet"
+            text: qsTr("Start from")
+            color: Theme.secondary
+            font.pixelSize: Theme.metaSize
+            leftPadding: Theme.standard
+            bottomPadding: Theme.compact
+        }
+        Flow {
+            visible: home.kind === "spreadsheet"
+            width: parent.width
+            spacing: Theme.comfortable
+            leftPadding: Theme.standard
+            bottomPadding: Theme.surface
+            Repeater {
+                model: [
+                    { name: "", title: qsTr("Blank"), note: qsTr("An empty sheet"), band: "#FFFFFF" },
+                    { name: "budget", title: qsTr("Monthly budget"), note: qsTr("Spent, budget, left"), band: "#9DD6F2" },
+                    { name: "tracker", title: qsTr("Tracker"), note: qsTr("Dates and ticks"), band: "#A8DDB5" },
+                    { name: "shopping", title: qsTr("Shopping list"), note: qsTr("Items and prices"), band: "#F7D774" },
+                    { name: "schedule", title: qsTr("Schedule"), note: qsTr("Week by hour"), band: "#D2B4F5" }
+                ]
+                AbstractButton {
+                    id: start
+                    required property var modelData
+                    width: 132
+                    height: 128
+                    hoverEnabled: true
+                    onClicked: modelData.name.length ? home.templateRequested(modelData.name, modelData.title) : home.newRequested()
+                    contentItem: Column {
+                        spacing: 6
+                        Rectangle {
+                            width: start.width
+                            height: 80
+                            radius: Theme.paperRadius
+                            color: "white"
+                            clip: true
+                            border.width: start.hovered ? 2 : 0
+                            border.color: Theme.accent
+                            Rectangle { width: parent.width; height: 12; color: start.modelData.band; visible: start.modelData.name.length > 0 }
+                            Repeater {
+                                model: 3
+                                Rectangle { required property int index; x: 33 * (index + 1); width: 1; height: parent.height; color: "#E2E2E8" }
+                            }
+                            Repeater {
+                                model: 5
+                                Rectangle { required property int index; y: 12 + 13 * (index + 1); width: parent.width; height: 1; color: "#E2E2E8" }
+                            }
+                            Repeater {
+                                model: start.modelData.name.length ? 4 : 0
+                                Rectangle { required property int index; x: 5; y: 17 + 13 * index; width: 18 + (index * 7) % 10; height: 5; radius: 2; color: "#C8C8D0" }
+                            }
+                            Corners { anchors.fill: parent; ground: Theme.desk }
+                        }
+                        Text { text: start.modelData.title; color: Theme.text; font.pixelSize: 15; font.weight: Font.Medium }
+                        Text { text: start.modelData.note; color: Theme.secondary; font.pixelSize: 12 }
+                    }
+                }
+            }
+        }
+
         Text {
             text: recent.count ? qsTr("Recent") : (find.text.length ? qsTr("Nothing by that name") : qsTr("Nothing opened yet"))
             color: Theme.secondary

@@ -35,7 +35,11 @@ public:
     Q_INVOKABLE void reload();
     // A blank file of this app's kind to open, and where it will be kept.
     Q_INVOKABLE QUrl blankSource() const;
-    Q_INVOKABLE QUrl newDocumentTarget() const;
+    // A name may be given in place of "Untitled spreadsheet" and the like.
+    Q_INVOKABLE QUrl newDocumentTarget(const QString &name = {}) const;
+    // One of the ready-made files built into the program ("budget",
+    // "tracker", "shopping", "schedule"), copied out to open.
+    Q_INVOKABLE QUrl templateSource(const QString &name) const;
     // Whether a file belongs to this app's kind, by its name.
     Q_INVOKABLE bool accepts(const QUrl &url) const;
 

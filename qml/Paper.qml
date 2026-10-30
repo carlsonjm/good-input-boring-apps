@@ -12,13 +12,16 @@ Item {
     property OfficeDocument document
     // How the page meets the window: "width" fits the page's width (Docs),
     // "page" the whole page (Slides), "screen" edge to edge (presenting), and
-    // "actual" draws it at its own size (Sheets).
+    // "actual" draws it near its own size (Sheets).
     property string fit: "width"
     // Off for a page that is only shown, such as a slide being presented.
     property bool interactive: true
     // Widest the page is drawn, in pixels, whatever the window.
     property real maxPageWidth: 860
     readonly property alias view: view
+    // Where the window onto the document is, for drawing beside it.
+    readonly property alias scrollX: flick.contentX
+    readonly property alias scrollY: flick.contentY
     readonly property bool selecting: interactive && document && document.hasSelection
 
     readonly property real zoom: {
@@ -30,14 +33,17 @@ Item {
         switch (fit) {
         case "page": return Math.min((width - room) / w, (height - room) / h)
         case "screen": return Math.min(width / w, height / h)
-        case "actual": return 1 / 15
+        // A sheet a little larger than the engine's own size, for fingers.
+        case "actual": return 1.4 / 15
         default: return Math.min(width - room, maxPageWidth) / w
         }
     }
-    readonly property real sideX: fit === "actual" ? Theme.surface : Math.max(0, (width - view.contentWidth) / 2)
+    // A spreadsheet's grid starts at the edge; its frame and headers are
+    // drawn around it by the window.
+    readonly property real sideX: fit === "actual" ? 0 : Math.max(0, (width - view.contentWidth) / 2)
     readonly property real topY: fit === "screen" ? Math.max(0, (height - view.contentHeight) / 2)
         : fit === "page" ? Math.max(Theme.surface, (height - view.contentHeight) / 2)
-        : fit === "width" ? Theme.surface : Theme.compact
+        : fit === "width" ? Theme.surface : 0
 
     function viewRect(r) {
         // Reads contentX and contentY so the shapes follow the page as it scrolls.
@@ -73,8 +79,8 @@ Item {
     Flickable {
         id: flick
         anchors.fill: parent
-        contentWidth: Math.max(width, view.contentWidth + 2 * Theme.surface)
-        contentHeight: view.contentHeight + paper.topY + Theme.surface
+        contentWidth: paper.fit === "actual" ? Math.max(width, view.contentWidth) : Math.max(width, view.contentWidth + 2 * Theme.surface)
+        contentHeight: paper.fit === "actual" ? Math.max(height, view.contentHeight) : view.contentHeight + paper.topY + Theme.surface
         boundsBehavior: Flickable.StopAtBounds
         clip: true
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
@@ -159,30 +165,7 @@ Item {
                 x: Math.floor(at.x); y: Math.floor(at.y)
                 width: Math.ceil(at.x + at.width) + 1 - x
                 height: Math.ceil(at.y + at.height) + 1 - y
-                Repeater {
-                    model: 4
-                    Canvas {
-                        required property int index
-                        width: Theme.paperRadius
-                        height: Theme.paperRadius
-                        x: index % 2 ? parent.width - width : 0
-                        y: index > 1 ? parent.height - height : 0
-                        rotation: [0, 90, 270, 180][index]
-                        property color ground: Theme.desk
-                        onGroundChanged: requestPaint()
-                        onPaint: {
-                            const c = getContext("2d")
-                            c.reset()
-                            c.fillStyle = ground
-                            c.beginPath()
-                            c.moveTo(0, 0)
-                            c.lineTo(width, 0)
-                            c.arc(width, height, width, 1.5 * Math.PI, Math.PI, true)
-                            c.closePath()
-                            c.fill()
-                        }
-                    }
-                }
+                Corners { anchors.fill: parent }
             }
         }
     }

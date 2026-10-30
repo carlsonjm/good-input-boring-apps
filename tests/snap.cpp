@@ -3,7 +3,8 @@
 //   office-snap <docs|sheets|slides> <file> <step> <picture>
 // Steps: open, select (double tap the first word), style (open Aa), home,
 // gap (where the first page meets the second), cell (B4 chosen), page (Aa's
-// Page side), find (looking for \"the\"), more (the More menu).
+// Page side), find (looking for \"the\"), more (the More menu), range (B2:B4
+// chosen), cells (B2:C4 chosen with Aa open).
 #include "Engine.h"
 #include "OfficeDocument.h"
 
@@ -74,6 +75,13 @@ int main(int argc, char *argv[])
                 QMetaObject::invokeMethod(bar, "step", Q_ARG(QVariant, false));
             } else if (step == QLatin1String("more")) {
                 QMetaObject::invokeMethod(window->findChild<QObject *>(QStringLiteral("moreMenu")), "open");
+            } else if (step == QLatin1String("range")) {
+                doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("B2:B4")}});
+                doc->settle(300);
+            } else if (step == QLatin1String("cells")) {
+                doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("B2:C4")}});
+                doc->settle(300);
+                window->setProperty("styleOpen", true);
             } else if (step == QLatin1String("cell")) {
                 doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("B4")}});
                 doc->settle(300);

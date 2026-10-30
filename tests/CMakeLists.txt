@@ -13,3 +13,6 @@ set_tests_properties(engine PROPERTIES
 # Not a test: draws the screens into pictures for looking at them by hand.
 qt_add_executable(office-snap snap.cpp)
 target_link_libraries(office-snap PRIVATE office-screens office-screensplugin Qt6::Test Qt6::QuickControls2)
+# Not a test: builds the ready-made sheets in templates/ (tools/make-templates.sh).
+qt_add_executable(office-templates ../tools/make-templates.cpp)
+target_link_libraries(office-templates PRIVATE office-screens Qt6::Test)

@@ -94,6 +94,10 @@ ApplicationWindow {
         findLabel: window.kind === "spreadsheet" ? qsTr("Find a spreadsheet") : window.kind === "presentation" ? qsTr("Find a presentation") : qsTr("Find a document")
         onOpenRequested: (url) => window.open(url)
         onNewRequested: window.newDocument()
+        onTemplateRequested: (name, title) => {
+            window.pendingTarget = recent.newDocumentTarget(title)
+            doc.source = recent.templateSource(name)
+        }
     }
 
     // A file that would not open says why, and offers the way back.
@@ -117,7 +121,7 @@ ApplicationWindow {
             anchors.right: parent.right
             document: doc
             styleOpen: window.styleOpen
-            showStyle: window.kind === "text"
+            showStyle: window.kind === "text" || window.kind === "spreadsheet"
             onBack: window.closeDocument()
             onStyleRequested: window.styleOpen = !window.styleOpen
             onMoreRequested: (anchor) => moreMenu.popup(anchor, 0, anchor.height + Theme.tight)
@@ -131,34 +135,71 @@ ApplicationWindow {
             ]
         }
 
-        // Sheets: what the chosen cell holds, shown only while one is chosen.
+        // Sheets: which cells are chosen and what the first one holds.
         Rectangle {
             id: formulaLine
-            visible: window.kind === "spreadsheet" && doc.cellAddress.length > 0
+            visible: window.kind === "spreadsheet"
             anchors.top: topLine.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 2 * Theme.surface, 900)
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: Theme.surface
+            anchors.rightMargin: Theme.surface
             height: visible ? Theme.control : 0
             radius: Theme.paperRadius
             color: Theme.chrome
             Row {
                 anchors.fill: parent
-                anchors.leftMargin: Theme.comfortable
+                anchors.leftMargin: 6
                 spacing: Theme.standard
-                Text { text: doc.cellAddress; color: Theme.secondary; font.pixelSize: Theme.metaSize; anchors.verticalCenter: parent.verticalCenter }
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 32
+                    width: Math.max(48, address.implicitWidth + 24)
+                    radius: 16
+                    color: Theme.raised
+                    Text { id: address; anchors.centerIn: parent; text: doc.cellAddress; color: Theme.secondary; font.pixelSize: Theme.metaSize }
+                }
+                Text { text: "fx"; color: Theme.secondary; font.pixelSize: 14; font.italic: true; anchors.verticalCenter: parent.verticalCenter }
                 Text { text: doc.cellFormula; color: Theme.text; font.pixelSize: 15; font.family: "monospace"; anchors.verticalCenter: parent.verticalCenter }
+            }
+        }
+
+        // Sheets: the grid as one sheet of paper, with its letters and numbers.
+        Item {
+            id: sheetFrame
+            visible: window.kind === "spreadsheet"
+            anchors.top: formulaLine.bottom
+            anchors.topMargin: Theme.compact
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: Theme.surface
+            anchors.rightMargin: Theme.surface
+            anchors.bottom: partTabs.top
+            anchors.bottomMargin: Theme.standard
+            Rectangle { anchors.fill: parent; color: "white" }
+            SheetHeaders {
+                id: sheetHeaders
+                anchors.fill: parent
+                document: window.kind === "spreadsheet" ? doc : null
+                paper: paper
             }
         }
 
         Paper {
             id: paper
-            anchors.top: formulaLine.visible ? formulaLine.bottom : topLine.bottom
-            anchors.topMargin: formulaLine.visible ? Theme.compact : 0
-            anchors.left: slideStrip.visible ? slideStrip.right : parent.left
-            anchors.right: parent.right
-            anchors.bottom: partTabs.visible ? partTabs.top : parent.bottom
+            anchors.top: sheetFrame.visible ? sheetFrame.top : topLine.bottom
+            anchors.topMargin: sheetFrame.visible ? sheetHeaders.band : 0
+            anchors.left: sheetFrame.visible ? sheetFrame.left : slideStrip.visible ? slideStrip.right : parent.left
+            anchors.leftMargin: sheetFrame.visible ? sheetHeaders.gutter : 0
+            anchors.right: sheetFrame.visible ? sheetFrame.right : parent.right
+            anchors.bottom: sheetFrame.visible ? sheetFrame.bottom : parent.bottom
             document: doc
             fit: window.kind === "spreadsheet" ? "actual" : window.kind === "presentation" ? "page" : "width"
+        }
+
+        Corners {
+            visible: sheetFrame.visible
+            anchors.fill: sheetFrame
         }
 
         // Slides: every slide down the side, the current one ringed.
@@ -172,7 +213,8 @@ ApplicationWindow {
             width: visible ? 196 : 0
             spacing: 14
             clip: true
-            model: doc.parts
+            // Only Slides draws its strip; elsewhere the parts are sheets or pages.
+            model: window.kind === "presentation" ? doc.parts : 0
             footer: Pill { x: 22; y: 14; width: 160; raised: true; label: qsTr("New slide"); onClicked: doc.command(".uno:InsertPage") }
             delegate: AbstractButton {
                 id: slideButton
@@ -206,10 +248,11 @@ ApplicationWindow {
             }
         }
 
-        // Sheets: the sheets of the file as pills along the bottom.
+        // Sheets: the sheets of the file as pills along the bottom, and what
+        // the chosen cells add up to.
         Row {
             id: partTabs
-            visible: window.kind === "spreadsheet" && doc.parts > 0
+            visible: window.kind === "spreadsheet"
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Theme.comfortable
             anchors.left: parent.left
@@ -233,6 +276,67 @@ ApplicationWindow {
             }
         }
 
+        Rectangle {
+            id: tally
+            // "Average: 4; Sum: 12" from the engine, read as Sum, Average, Count.
+            readonly property var parts: {
+                const out = {}
+                const raw = doc.states[".uno:StateTableCell"] || ""
+                for (const piece of raw.split(";")) {
+                    const kv = piece.split(":")
+                    if (kv.length === 2)
+                        out[kv[0].trim()] = kv[1].trim()
+                }
+                return out
+            }
+            readonly property string count: {
+                const m = (doc.states[".uno:RowColSelCount"] || "").match(/(\d+) rows?, (\d+) columns?/)
+                return m ? String(Number(m[1]) * Number(m[2])) : ""
+            }
+            readonly property bool block: doc.cellAddress.indexOf(":") >= 0
+            readonly property string text: {
+                const bits = []
+                if (parts["Sum"] !== undefined)
+                    bits.push(qsTr("Sum") + "  <b>" + parts["Sum"] + "</b>")
+                if (block && parts["Average"] !== undefined)
+                    bits.push(qsTr("Average") + "  <b>" + parts["Average"] + "</b>")
+                if (block && count.length)
+                    bits.push(qsTr("Count") + "  <b>" + count + "</b>")
+                return bits.join("&nbsp;&nbsp;&nbsp;&nbsp;")
+            }
+            visible: window.kind === "spreadsheet" && text.length > 0
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.surface
+            anchors.verticalCenter: partTabs.verticalCenter
+            height: 36
+            width: tallyText.implicitWidth + 32
+            radius: height / 2
+            color: Theme.chrome
+            Text {
+                id: tallyText
+                anchors.centerIn: parent
+                textFormat: Text.StyledText
+                text: tally.text
+                color: Theme.secondary
+                font.pixelSize: Theme.metaSize
+            }
+        }
+
+        SheetBar {
+            id: sheetBar
+            visible: window.kind === "spreadsheet" && tally.block && !window.styleOpen
+            document: doc
+            view: paper.view
+            sum: tally.parts["Sum"] !== undefined ? qsTr("Sum %1").arg(tally.parts["Sum"]) : ""
+            readonly property rect first: doc.selectionRects.length ? paper.viewRect(doc.selectionRects[0]) : Qt.rect(0, 0, 0, 0)
+            x: Math.max(Theme.comfortable, Math.min(parent.width - width - Theme.comfortable, paper.x + first.x + first.width / 2 - width / 2))
+            y: {
+                const below = paper.y + first.y + first.height + Theme.standard
+                return below + height < partTabs.y - Theme.compact ? below : Math.max(paper.y + Theme.compact, paper.y + first.y - height - Theme.standard)
+            }
+            onDone: paper.focusPage()
+        }
+
         SelectionBar {
             id: selectionBar
             visible: window.kind === "text" && doc.hasSelection && !window.styleOpen && !window.finding
@@ -245,6 +349,15 @@ ApplicationWindow {
                 return above > topLine.height ? above : paper.y + first.y + first.height + 56
             }
             onDone: paper.focusPage()
+        }
+
+        CellSheet {
+            visible: window.styleOpen && window.kind === "spreadsheet"
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.comfortable
+            y: topLine.height
+            document: doc
+            onDone: { window.styleOpen = false; paper.focusPage() }
         }
 
         StyleSheet {

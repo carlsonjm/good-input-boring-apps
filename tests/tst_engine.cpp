@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "OfficeDocument.h"
+#include "Recent.h"
 
 #include <QFile>
 #include <QGuiApplication>
@@ -144,6 +145,49 @@ private Q_SLOTS:
         QTRY_VERIFY_WITH_TIMEOUT(doc.cellFormula().contains(QStringLiteral("SUM")), 5000);
         QTRY_COMPARE_WITH_TIMEOUT(doc.selectedText().trimmed(), QStringLiteral("14"), 5000);
         QVERIFY(!doc.cellCursor().isEmpty());
+    }
+
+    void sheetsTools()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("budget.xlsx"))));
+        const auto put = [&](const QString &cell, const QString &text) {
+            doc.command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), cell}});
+            doc.typeText(text);
+            doc.pressKey(1280);
+        };
+        put(QStringLiteral("C2"), QStringLiteral("5"));
+        put(QStringLiteral("C3"), QStringLiteral("7"));
+        doc.command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("C2:C3")}});
+        doc.settle(300);
+        QCOMPARE(doc.cellAddress(), QStringLiteral("C2:C3"));
+        QTRY_VERIFY2_WITH_TIMEOUT(doc.states().value(QStringLiteral(".uno:StateTableCell")).toString().contains(QStringLiteral("Sum: 12")),
+                                  qPrintable(doc.states().value(QStringLiteral(".uno:StateTableCell")).toString()), 3000);
+        doc.command(QStringLiteral(".uno:NumberFormatPercent"));
+        doc.command(QStringLiteral(".uno:AutoSum"));
+        doc.settle(300);
+        doc.command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("C4")}});
+        doc.settle(300);
+        QCOMPARE(doc.cellFormula(), QStringLiteral("=SUM(C2:C3)"));
+        // The headers the window draws come from the engine.
+        const QByteArray headers = doc.commandValues(QStringLiteral(".uno:ViewRowColumnHeaders?x=0&y=0&width=6000&height=3000")).toUtf8();
+        QVERIFY(headers.contains("\"text\": \"B\""));
+        QVERIFY(headers.contains("\"text\": \"3\""));
+    }
+
+    void startsFromATemplate()
+    {
+        Recent recent;
+        recent.setKind(QStringLiteral("spreadsheet"));
+        for (const QString &name : {QStringLiteral("budget"), QStringLiteral("tracker"), QStringLiteral("shopping"), QStringLiteral("schedule")}) {
+            const QUrl source = recent.templateSource(name);
+            QVERIFY2(!source.isEmpty(), qPrintable(name));
+            OfficeDocument doc;
+            QVERIFY2(open(doc, source), qPrintable(name));
+            QCOMPARE(doc.kind(), OfficeDocument::Spreadsheet);
+            QCOMPARE(doc.parts(), 1);
+        }
+        QVERIFY(recent.newDocumentTarget(QStringLiteral("Monthly budget")).fileName().startsWith(QStringLiteral("Monthly budget")));
     }
 
     void presentationHasSlides()

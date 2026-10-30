@@ -55,6 +55,10 @@ qt_add_qml_module(office-screens
         qml/StyleSheet.qml
         qml/HomeView.qml
         qml/FindBar.qml
+        qml/Corners.qml
+        qml/SheetHeaders.qml
+        qml/SheetBar.qml
+        qml/CellSheet.qml
     RESOURCES
         qml/icons/chevron-left.svg
         qml/icons/undo-2.svg
@@ -73,6 +77,9 @@ qt_add_qml_module(office-screens
         qml/icons/file-text.svg
         qml/icons/chevron-right.svg
         qml/icons/x.svg
+        qml/icons/arrow-down-a-z.svg
+        qml/icons/arrow-down.svg
+        qml/icons/align-right.svg
         qml/icons/ink/chevron-left.svg
         qml/icons/ink/undo-2.svg
         qml/icons/ink/redo-2.svg
@@ -90,7 +97,16 @@ qt_add_qml_module(office-screens
         qml/icons/ink/file-text.svg
         qml/icons/ink/chevron-right.svg
         qml/icons/ink/x.svg
+        qml/icons/ink/arrow-down-a-z.svg
+        qml/icons/ink/arrow-down.svg
+        qml/icons/ink/align-right.svg
 )
+# The ready-made sheets Sheets offers to start from (tools/make-templates.sh).
+qt_add_resources(office-screens "templates"
+    PREFIX "/templates"
+    BASE templates
+    FILES templates/budget.fods templates/tracker.fods templates/shopping.fods templates/schedule.fods)
+
 target_include_directories(office-screens PUBLIC src/engine src/view src/app ${LIBREOFFICEKIT_INCLUDE_DIR})
 target_link_libraries(office-screens PUBLIC Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick ${CMAKE_DL_LIBS})
 

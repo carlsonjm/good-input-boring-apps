@@ -230,7 +230,22 @@ QUrl Recent::blankSource() const
     return QUrl::fromLocalFile(path);
 }
 
-QUrl Recent::newDocumentTarget() const
+QUrl Recent::templateSource(const QString &name) const
+{
+    QFile source(QStringLiteral(":/templates/") + name + QStringLiteral(".fods"));
+    if (!source.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+    const QString path = QDir::tempPath() + QStringLiteral("/good-input-office-template.fods");
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return {};
+    }
+    file.write(source.readAll());
+    return QUrl::fromLocalFile(path);
+}
+
+QUrl Recent::newDocumentTarget(const QString &name) const
 {
     QString folder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     if (folder.isEmpty()) {
@@ -245,6 +260,9 @@ QUrl Recent::newDocumentTarget() const
     } else if (m_kind == QLatin1String("presentation")) {
         base = QStringLiteral("Untitled presentation");
         suffix = QStringLiteral("pptx");
+    }
+    if (!name.isEmpty()) {
+        base = name;
     }
     QString path = QStringLiteral("%1/%2.%3").arg(folder, base, suffix);
     for (int n = 2; QFileInfo::exists(path); ++n) {
