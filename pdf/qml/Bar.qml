@@ -26,6 +26,19 @@ Item {
     }
     HoverHandler { onHoveredChanged: bar.app.barHovered = hovered }
 
+    function showTip(n) {
+        const buttons = [];
+        for (let i = 0; i < row.children.length; ++i) {
+            const child = row.children[i];
+            if (child.visible && child.tip !== undefined)
+                buttons.push(child);
+        }
+        if (buttons[n]) {
+            buttons[n].checkTip = true;
+            buttons[n].rested = true;
+        }
+    }
+
     Row {
         id: row
         anchors.verticalCenter: parent.verticalCenter
@@ -73,7 +86,7 @@ Item {
         IconButton { visible: bar.mode === "read"; glyph: "highlighter"; label: qsTr("Highlight"); onClicked: bar.app.mode = "highlight" }
         IconButton { visible: bar.mode === "read"; glyph: "signature"; label: qsTr("Sign"); onClicked: bar.app.openSign() }
         IconButton { visible: bar.mode === "read"; glyph: "layout-grid"; label: qsTr("All pages"); onClicked: bar.app.openPages(false) }
-        IconButton { visible: bar.mode === "read"; glyph: "ellipsis"; label: qsTr("More: open, save a copy, your signature"); onClicked: bar.app.openMore() }
+        IconButton { visible: bar.mode === "read"; glyph: "ellipsis"; label: qsTr("More: open, save a copy, your signature"); tip: qsTr("More"); onClicked: bar.app.openMore() }
 
         IconButton { visible: bar.mode === "form"; glyph: "chevron-up"; label: qsTr("Previous field"); onClicked: bar.app.goToField(pdf.previousField(bar.app.field)) }
         IconButton { visible: bar.mode === "form"; glyph: "chevron-down"; label: qsTr("Next field"); onClicked: bar.app.goToField(pdf.nextField(bar.app.field)) }

@@ -185,6 +185,8 @@ Window {
         function openMore() { more.visible = true; }
         // GOODINPUT_PDF_SHOT_DO in main.cpp reaches the app's functions through here.
         function callFromCheck(name, args) { return app[name].apply(app, args); }
+        // For the screens check: shows the tip of the bar's button `n`, counted from 0.
+        function showTip(n) { bar.showTip(n); }
         function act(what) {
             switch (what) {
             case "open": openDialog.open(); break;
