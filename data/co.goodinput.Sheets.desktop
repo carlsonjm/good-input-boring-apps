@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Sheets
+Comment=Spreadsheets, Excel files included
+Exec=good-input-office --sheets %U
+Icon=x-office-spreadsheet
+Terminal=false
+Categories=Office;
+MimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.ms-excel;application/vnd.oasis.opendocument.spreadsheet;text/csv;
+StartupWMClass=co.goodinput.Sheets

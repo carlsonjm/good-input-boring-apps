@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Docs
+Comment=Write and edit documents, Word files included
+Exec=good-input-office --docs %U
+Icon=x-office-document
+Terminal=false
+Categories=Office;
+MimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/msword;application/vnd.oasis.opendocument.text;application/rtf;
+StartupWMClass=co.goodinput.Docs

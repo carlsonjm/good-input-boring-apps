@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
+ <office:body>
+  <office:text>
+   <text:h text:outline-level="1">Garden plan</text:h>
+   <text:p>The raised bed by the fence gets the most sun after noon.</text:p>
+   <text:p>Seeds to order before the end of March.</text:p>
+  </office:text>
+ </office:body>
+</office:document>
