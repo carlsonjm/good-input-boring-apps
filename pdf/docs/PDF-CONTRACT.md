@@ -3,6 +3,18 @@
 What the app does for a person, part by part. The look is described by its
 approved mock-up; this file is the behaviour underneath it.
 
+## The look
+
+- The page is white paper with 10 px corners on the desk, Dark or Light as the
+  desktop is set; only the desk and the controls change. It opens fitted to the
+  window's height; a pinch or Ctrl and the wheel zooms up to four times.
+- One bar floats 40 px above the bottom edge: the file's name and page, Search,
+  Highlight, Sign, All pages and More. While reading it leaves after three
+  quiet seconds and comes back with a tap; anything else keeps it up.
+- Other moments take the bar's place: the form's field and how many are still
+  empty, where to tap to sign, Undo just after signing, short notes such as
+  "Saved".
+
 ## Opening
 
 - A file opens, or the app says which of these it is: not there, not a PDF,
@@ -60,5 +72,7 @@ approved mock-up; this file is the behaviour underneath it.
   same number of pages, keeps the old file's permissions and only then swaps it
   in. A failed save leaves the person's file exactly as it was.
 - After a save the app carries on from the saved file, so more changes build on it.
+- Closing the window keeps what was written, as paper does: unsaved changes are
+  saved on the way out. "Save now" in More, and Ctrl+S, save at any time.
 - Save a copy writes elsewhere and leaves the open file untouched; it refuses to
   write over the open file itself.

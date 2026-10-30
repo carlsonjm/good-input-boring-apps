@@ -62,6 +62,7 @@ bool Session::hasSignature() const { return m_signature.has(); }
 bool Session::open(const QUrl &url, const QString &password)
 {
     close();
+    m_asked = url;
     const QString path = url.isLocalFile() ? url.toLocalFile() : url.toString();
     PdfFile::OpenResult result;
     {

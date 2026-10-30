@@ -24,6 +24,8 @@ class Session : public QObject
     Q_PROPERTY(QString status READ status NOTIFY opened)
     Q_PROPERTY(QString title READ title NOTIFY opened)
     Q_PROPERTY(QUrl url READ url NOTIFY opened)
+    // The file last asked for, opened or not: a locked one is asked again by it.
+    Q_PROPERTY(QUrl asked READ asked NOTIFY opened)
     Q_PROPERTY(int pageCount READ pageCount NOTIFY opened)
     Q_PROPERTY(int page READ page WRITE setPage NOTIFY pageChanged)
     Q_PROPERTY(int revision READ revision NOTIFY revisionChanged)
@@ -44,6 +46,7 @@ public:
     QString status() const { return m_status; }
     QString title() const;
     QUrl url() const;
+    QUrl asked() const { return m_asked; }
     int pageCount() const;
     int page() const { return m_page; }
     void setPage(int page);
@@ -121,6 +124,7 @@ private:
     int m_page = 0;
     int m_revision = 0;
     bool m_changed = false;
+    QUrl m_asked;
     QString m_lastQuery;
     QVariantList m_searchHits;
 };
