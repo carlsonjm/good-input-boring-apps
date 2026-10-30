@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- A sheet of paper on the Piano ground, its corner folded; the PDF Basic's mark. -->
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="#141414"/>
+  <path d="M40 26h34l18 18v50a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="#F8F8FF"/>
+  <path d="M74 26v12a6 6 0 0 0 6 6h12" fill="#D6D6DE"/>
+  <rect x="42" y="58" width="36" height="5" rx="2.5" fill="#FFD60A"/>
+  <rect x="42" y="70" width="40" height="4" rx="2" fill="#A8A8B0"/>
+  <rect x="42" y="80" width="28" height="4" rx="2" fill="#A8A8B0"/>
+</svg>
