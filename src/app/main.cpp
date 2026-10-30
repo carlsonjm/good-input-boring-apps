@@ -1,6 +1,6 @@
 #include <QCommandLineParser>
 #include <QDir>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
@@ -21,7 +21,9 @@ Q_IMPORT_QML_PLUGIN(co_goodinput_officePlugin)
 // which name and icon the desktop shows for its windows.
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    // A widgets application, so Plasma hands over the colour scheme as it
+    // does for Notes; a plain one is left on Qt's light default.
+    QApplication app(argc, argv);
     QCoreApplication::setOrganizationName(QStringLiteral("Good Input"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("goodinput.co"));
     QQuickStyle::setStyle(QStringLiteral("Basic"));

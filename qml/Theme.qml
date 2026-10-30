@@ -7,7 +7,10 @@ QtObject {
     id: theme
 
     readonly property SystemPalette system: SystemPalette { colorGroup: SystemPalette.Active }
-    readonly property bool dark: system.window.hslLightness < 0.5
+    // The desktop's own light or dark setting where Qt reports one (6.5 and
+    // later), otherwise how dark the scheme's window colour is.
+    readonly property int scheme: Qt.styleHints.colorScheme !== undefined ? Qt.styleHints.colorScheme : 0
+    readonly property bool dark: scheme === 2 ? true : scheme === 1 ? false : system.window.hslLightness < 0.5
 
     // The desk the paper lies on, and the chrome one step above it.
     readonly property color desk: dark ? "#141414" : "#ECECF0"

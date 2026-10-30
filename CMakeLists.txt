@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 include(GNUInstallDirs)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Test)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Test Widgets)
 qt_standard_project_setup()
 
 # LibreOfficeKit is header-only: the program finds LibreOffice at run time.
@@ -118,7 +118,7 @@ target_include_directories(office-screens PUBLIC src/engine src/view src/app ${L
 target_link_libraries(office-screens PUBLIC Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick ${CMAKE_DL_LIBS})
 
 qt_add_executable(good-input-office src/app/main.cpp)
-target_link_libraries(good-input-office PRIVATE office-screens office-screensplugin Qt6::QuickControls2)
+target_link_libraries(good-input-office PRIVATE office-screens office-screensplugin Qt6::QuickControls2 Qt6::Widgets)
 install(TARGETS good-input-office RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES
     data/co.goodinput.Docs.desktop
