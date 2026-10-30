@@ -4,11 +4,11 @@ name: Arch current
 # LibreOffice, so an update that breaks them shows here before a device.
 on:
   pull_request:
-    # A Markdown-only change runs no build.
-    paths-ignore: ['**.md']
+    # A Markdown-only change runs no build, and PDF has its own check.
+    paths-ignore: ['**.md', 'pdf/**']
   push:
     branches: [main]
-    paths-ignore: ['**.md']
+    paths-ignore: ['**.md', 'pdf/**']
   workflow_dispatch:
 
 permissions:

@@ -25,6 +25,11 @@ and its handles, every button) is drawn here, in the Shuffle suite's look.
 
 Every app saves as you work, over the file it opened, and can save a PDF copy.
 
+## PDF
+
+The PDF app lives in `pdf/`, a project of its own with its own build,
+check and Flathub manifest; see `pdf/README.md`.
+
 ## Build and check
 
 Needs Qt 6.4 or newer (Core, Gui, Qml, Quick, Quick Controls, Svg) and
