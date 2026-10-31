@@ -12,6 +12,7 @@
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QRegularExpression>
 #include <QJsonObject>
 #include <QPointer>
 #include <QThread>
@@ -549,23 +550,106 @@ QStringList OfficeDocument::fontNames()
     return names;
 }
 
+// What the document's headers and footers hold, read from a flat copy of it:
+// for each, whether there is one and whether it holds nothing but page numbers.
+struct HeaderFooter
+{
+    bool header = false, headerOnlyNumbers = false;
+    bool footer = false, footerOnlyNumbers = false;
+};
+
+static HeaderFooter readHeaderFooter(const QByteArray &flat)
+{
+    HeaderFooter found;
+    const int from = flat.indexOf("<office:master-styles");
+    const int to = flat.indexOf("</office:master-styles>");
+    if (from < 0 || to < 0) {
+        return found;
+    }
+    const QString styles = QString::fromUtf8(flat.mid(from, to - from));
+    // Any words left once the page numbers are taken out are someone's own.
+    static const QRegularExpression numbers(QStringLiteral("<text:page-number[^>]*>[^<]*</text:page-number>"));
+    static const QRegularExpression tags(QStringLiteral("<[^>]*>"));
+    const auto look = [&](const QString &name, bool &present, bool &onlyNumbers) {
+        const QRegularExpression part(QStringLiteral("<style:%1(?:\\s[^>]*)?(?:/>|>(.*?)</style:%1>)").arg(name),
+                                      QRegularExpression::DotMatchesEverythingOption);
+        present = false;
+        onlyNumbers = true;
+        for (auto it = part.globalMatch(styles); it.hasNext();) {
+            const QString inside = it.next().captured(1);
+            present = true;
+            QString words = inside;
+            words.remove(numbers).remove(tags);
+            if (!words.trimmed().isEmpty()) {
+                onlyNumbers = false;
+            }
+        }
+    };
+    look(QStringLiteral("header"), found.header, found.headerOnlyNumbers);
+    look(QStringLiteral("footer"), found.footer, found.footerOnlyNumbers);
+    return found;
+}
+
 void OfficeDocument::addPageNumbers(const QString &where)
 {
     if (m_kind != Text) {
         return;
     }
-    // Writing the number moves the cursor into the header or footer; a tap
-    // where it was brings it back to the text.
-    const QRectF back = m_cursor;
-    const bool top = where == QLatin1String("top-corner");
-    const QVariantMap on{{QStringLiteral("PageStyle"), QStringLiteral("Default Page Style")}, {QStringLiteral("On"), true}};
-    command(top ? QStringLiteral(".uno:InsertPageHeader") : QStringLiteral(".uno:InsertPageFooter"), on);
-    command(QStringLiteral(".uno:InsertPageNumberField"));
-    command(where == QLatin1String("bottom-middle") ? QStringLiteral(".uno:CenterPara") : QStringLiteral(".uno:RightPara"));
-    settle(200);
-    if (back.height() > 0) {
-        tap(back.x() + 1, back.center().y(), 1);
+    settle(100);
+    const QString scratch = QDir::temp().filePath(QStringLiteral("good-input-office-%1.fodt").arg(quintptr(this)));
+    if (!saveCopy(QUrl::fromLocalFile(scratch), QStringLiteral("fodt"))) {
+        return;
     }
+    QFile file(scratch);
+    const HeaderFooter now = file.open(QIODevice::ReadOnly) ? readHeaderFooter(file.readAll()) : HeaderFooter();
+    file.close();
+    file.remove();
+
+    // The engine's jump goes from the text into the header or footer, and the
+    // same jump goes back to the text.
+    const QString toHeader = QStringLiteral(".uno:JumpToHeader");
+    const QString toFooter = QStringLiteral(".uno:JumpToFooter");
+    // No page style named means every one, whatever a file calls its own.
+    const QVariantMap on{{QStringLiteral("PageStyle"), QString()}, {QStringLiteral("On"), true}};
+
+    // Numbers placed before come out first, so a new place replaces the old
+    // one instead of adding to it. A header or footer that holds nothing but
+    // numbers is ours and is emptied; one with words of its own is left
+    // alone. It is not switched off: the engine would ask about that first,
+    // in a window nobody sees.
+    static const QRegularExpression onlyDigits(QStringLiteral("^[\\s\\d]*$"));
+    const auto empty = [&](const QString &jump) {
+        command(jump);
+        command(QStringLiteral(".uno:SelectAll"));
+        settle(100);
+        // Only ever what was checked above: should the jump not have
+        // landed, the text itself is chosen and is never deleted.
+        if (onlyDigits.match(selectedText()).hasMatch()) {
+            command(QStringLiteral(".uno:Delete"));
+        }
+        command(jump);
+    };
+    if (now.header && now.headerOnlyNumbers) {
+        empty(toHeader);
+    }
+    if (now.footer && now.footerOnlyNumbers) {
+        empty(toFooter);
+    }
+
+    if (where != QLatin1String("none")) {
+        const bool top = where == QLatin1String("top-corner");
+        // Switching one on moves the cursor into it; one already there is
+        // jumped into.
+        if (top ? now.header : now.footer) {
+            command(top ? toHeader : toFooter);
+        } else {
+            command(top ? QStringLiteral(".uno:InsertPageHeader") : QStringLiteral(".uno:InsertPageFooter"), on);
+        }
+        command(QStringLiteral(".uno:InsertPageNumberField"));
+        command(where == QLatin1String("bottom-middle") ? QStringLiteral(".uno:CenterPara") : QStringLiteral(".uno:RightPara"));
+        command(top ? toHeader : toFooter);
+    }
+    settle(200);
 }
 
 QUrl OfficeDocument::printCopy()
@@ -856,6 +940,19 @@ void OfficeDocument::settle(int ms)
         Engine::instance()->runAndWait([] {});
     }
     QCoreApplication::processEvents();
+}
+
+void OfficeDocument::setClientZoom(int tilePixels, int tileTwips)
+{
+    if (!m_link) {
+        return;
+    }
+    std::shared_ptr<DocumentLink> link = m_link;
+    Engine::instance()->run([link, tilePixels, tileTwips] {
+        if (link->doc) {
+            link->doc->setClientZoom(tilePixels, tilePixels, tileTwips, tileTwips);
+        }
+    });
 }
 
 void OfficeDocument::renderTile(int part, const QRectF &area, const QSize &pixels, QObject *context,

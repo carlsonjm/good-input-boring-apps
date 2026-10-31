@@ -158,6 +158,8 @@ public:
 
     // Draws an area of the current part into a picture of the given size,
     // off the interface thread; done is called back on the interface thread.
+    // The zoom tiles are drawn at, so the engine reports in step with them.
+    void setClientZoom(int tilePixels, int tileTwips);
     void renderTile(int part, const QRectF &area, const QSize &pixels, QObject *context,
                     std::function<void(QImage)> done);
 

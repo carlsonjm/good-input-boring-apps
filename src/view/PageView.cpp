@@ -102,6 +102,11 @@ void PageView::setContentY(qreal y)
     update();
 }
 
+int PageView::tileTwips() const
+{
+    return qMax(1, qRound(TileSize / m_zoom));
+}
+
 qreal PageView::contentWidth() const
 {
     return m_document ? m_document->size().width() * m_zoom : 0;
@@ -125,6 +130,7 @@ QRectF PageView::toView(const QRectF &twips) const
 
 void PageView::dropTiles()
 {
+    m_clientZoom = QSize();
     ++m_generation;
     m_tiles.clear();
     m_pending.clear();
@@ -141,7 +147,7 @@ void PageView::invalidate(const QRectF &area, int part)
             }
         }
     } else {
-        const qreal span = TileSize / m_zoom;
+        const qreal span = tileTwips();
         const int c0 = int(std::floor(area.left() / span));
         const int c1 = int(std::floor(area.right() / span));
         const int r0 = int(std::floor(area.top() / span));
@@ -189,19 +195,34 @@ void PageView::paint(QPainter *painter)
     const int part = m_part >= 0 ? m_part : m_document->currentPart();
     const qreal dpr = window() ? window()->effectiveDevicePixelRatio() : 1.0;
     const int tilePixels = qMax(64, int(std::ceil(TileSize * dpr)));
-    const qreal twipsPerTile = TileSize / m_zoom;
+    const int twipsPerTile = tileTwips();
+    const qreal side = tileSide();
+    const qreal toSource = tilePixels / side;
     const qreal maxX = contentWidth();
     const qreal maxY = contentHeight();
 
-    const int c0 = qMax(0, int(std::floor(m_contentX / TileSize)));
-    const int r0 = qMax(0, int(std::floor(m_contentY / TileSize)));
-    const int c1 = int(std::floor(qMin(maxX, m_contentX + width()) / TileSize));
-    const int r1 = int(std::floor(qMin(maxY, m_contentY + height()) / TileSize));
+    // A sheet's engine reports its cursor, selection and headers at the zoom
+    // it is told; at any other it rounds each row and column differently
+    // from the tiles, and the ring drifts off the grid further down.
+    if (m_document->kind() == OfficeDocument::Spreadsheet && m_part < 0
+        && m_clientZoom != QSize(tilePixels, twipsPerTile)) {
+        m_clientZoom = QSize(tilePixels, twipsPerTile);
+        m_document->setClientZoom(tilePixels, twipsPerTile);
+    }
+    if (!qFuzzyCompare(m_pixelScale, 1 / toSource)) {
+        m_pixelScale = 1 / toSource;
+        Q_EMIT pixelScaleChanged();
+    }
+
+    const int c0 = qMax(0, int(std::floor(m_contentX / side)));
+    const int r0 = qMax(0, int(std::floor(m_contentY / side)));
+    const int c1 = int(std::floor(qMin(maxX, m_contentX + width()) / side));
+    const int r1 = int(std::floor(qMin(maxY, m_contentY + height()) / side));
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
     for (int r = r0; r <= r1; ++r) {
         for (int c = c0; c <= c1; ++c) {
-            const QRectF target(c * TileSize - m_contentX, r * TileSize - m_contentY, TileSize, TileSize);
+            const QRectF target(c * side - m_contentX, r * side - m_contentY, side, side);
             const QRectF clipped = target.intersected(QRectF(-m_contentX, -m_contentY, maxX, maxY));
             if (clipped.isEmpty()) {
                 continue;
@@ -209,8 +230,8 @@ void PageView::paint(QPainter *painter)
             const quint64 k = key(part, c, r);
             auto it = m_tiles.constFind(k);
             if (it != m_tiles.constEnd() && !it->image.isNull()) {
-                const QRectF source((clipped.x() - target.x()) * dpr, (clipped.y() - target.y()) * dpr,
-                                    clipped.width() * dpr, clipped.height() * dpr);
+                const QRectF source((clipped.x() - target.x()) * toSource, (clipped.y() - target.y()) * toSource,
+                                    clipped.width() * toSource, clipped.height() * toSource);
                 painter->drawImage(clipped, it->image, source);
             }
             if (it == m_tiles.constEnd() || it->stale) {
@@ -221,7 +242,7 @@ void PageView::paint(QPainter *painter)
 
     // Let go of the tiles furthest from where the person is looking.
     if (m_tiles.size() > MaxTiles) {
-        const QPointF centre((m_contentX + width() / 2) / TileSize, (m_contentY + height() / 2) / TileSize);
+        const QPointF centre((m_contentX + width() / 2) / side, (m_contentY + height() / 2) / side);
         QList<QPair<qreal, quint64>> byDistance;
         for (auto it = m_tiles.cbegin(); it != m_tiles.cend(); ++it) {
             const int c = int((it.key() >> 24) & 0xffffff);

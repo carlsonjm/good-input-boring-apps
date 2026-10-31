@@ -168,15 +168,15 @@ Item {
                 width: Math.ceil(at.x + at.width) + 1 - x
                 height: Math.ceil(at.y + at.height) + 1 - y
                 // Full screen, a slide keeps square corners.
-                Corners { visible: paper.fit !== "screen"; anchors.fill: parent; ground: paper.ground }
-                // Trims the engine's own thin outline round a slide.
-                Rectangle {
-                    visible: paper.document && paper.document.kind === OfficeDocument.Presentation
+                // A slide's edge is pulled in to trim the engine's own thin
+                // outline round it; full screen, it keeps square corners.
+                Corners {
+                    readonly property bool slide: paper.document && paper.document.kind === OfficeDocument.Presentation
                     anchors.fill: parent
+                    ground: paper.ground
                     radius: paper.fit === "screen" ? 0 : Theme.paperRadius
-                    color: "transparent"
-                    border.width: 2
-                    border.color: paper.ground
+                    inset: slide ? 3 : 0
+                    reach: slide ? 6 : 3
                 }
             }
         }
@@ -209,6 +209,7 @@ Item {
 
     // Sheets: the chosen cell, ringed in the accent with a pearl at its corner.
     Rectangle {
+        objectName: "cellRing"
         readonly property rect at: paper.document && paper.interactive ? paper.viewRect(paper.document.cellCursor) : Qt.rect(0, 0, 0, 0)
         visible: at.width > 0
         x: at.x - 1; y: at.y - 1; width: at.width + 2; height: at.height + 2

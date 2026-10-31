@@ -5,7 +5,8 @@
 // gap (where the first page meets the second), cell (B4 chosen), page (Aa's
 // Page side), find (looking for \"the\"), more (the More menu), range (B2:B4
 // chosen), cells (B2:C4 chosen with Aa open), box (a slide's title chosen),
-// slideaa (Aa in Slides), present (the slide full screen).
+// slideaa (Aa in Slides), present (the slide full screen), goto:<cell> (that
+// cell chosen).
 #include "Engine.h"
 #include "OfficeDocument.h"
 
@@ -98,6 +99,9 @@ int main(int argc, char *argv[])
                         break;
                     }
                 }
+            } else if (step.startsWith(QLatin1String("goto:"))) {
+                doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), step.mid(5)}});
+                doc->settle(300);
             } else if (step == QLatin1String("cell")) {
                 doc->command(QStringLiteral(".uno:GoToCell"), {{QStringLiteral("ToPoint"), QStringLiteral("B4")}});
                 doc->settle(300);

@@ -216,6 +216,7 @@ Rectangle {
             Chip { label: qsTr("Bottom middle"); onClicked: { sheet.document.addPageNumbers("bottom-middle"); sheet.done() } }
             Chip { label: qsTr("Bottom corner"); onClicked: { sheet.document.addPageNumbers("bottom-corner"); sheet.done() } }
             Chip { label: qsTr("Top corner"); onClicked: { sheet.document.addPageNumbers("top-corner"); sheet.done() } }
+            Chip { label: qsTr("None"); onClicked: { sheet.document.addPageNumbers("none"); sheet.done() } }
         }
 
         Section {
@@ -223,11 +224,11 @@ Rectangle {
             label: qsTr("Top and bottom of each page")
             Chip {
                 label: qsTr("Add a header")
-                onClicked: { sheet.document.command(".uno:InsertPageHeader", { "PageStyle": "Default Page Style", "On": true }); sheet.done() }
+                onClicked: { sheet.document.command(".uno:InsertPageHeader", { "PageStyle": "", "On": true }); sheet.done() }
             }
             Chip {
                 label: qsTr("Add a footer")
-                onClicked: { sheet.document.command(".uno:InsertPageFooter", { "PageStyle": "Default Page Style", "On": true }); sheet.done() }
+                onClicked: { sheet.document.command(".uno:InsertPageFooter", { "PageStyle": "", "On": true }); sheet.done() }
             }
         }
     }

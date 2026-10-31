@@ -310,8 +310,61 @@ private Q_SLOTS:
         const int footer = saved.indexOf("<style:footer>");
         QVERIFY(footer > 0);
         QVERIFY(saved.indexOf("<text:page-number", footer) > footer);
+        QVERIFY(saved.indexOf("<text:page-number", footer) < saved.indexOf("<office:body>"));
         QVERIFY(saved.indexOf("Back in the text.") > saved.indexOf("<office:body>"));
         QVERIFY(QString::fromUtf8(doc.states().value(QStringLiteral(".uno:StateWordCount")).toString().toUtf8()).contains(QStringLiteral("words")));
+    }
+
+    void pageNumbersReplaceEachOther()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("letter.docx"))));
+        const auto count = [&](const QString &name) {
+            const QByteArray saved = flat(doc, name);
+            return std::make_pair(int(saved.count("<text:page-number")), saved);
+        };
+        doc.addPageNumbers(QStringLiteral("bottom-middle"));
+        doc.addPageNumbers(QStringLiteral("bottom-corner"));
+        doc.addPageNumbers(QStringLiteral("top-corner"));
+        doc.settle(300);
+        auto [numbers, saved] = count(QStringLiteral("numbers"));
+        QCOMPARE(numbers, 1);
+        // In the header, not the text.
+        QVERIFY(saved.indexOf("<text:page-number") < saved.indexOf("<office:body>"));
+        QVERIFY(saved.lastIndexOf("<style:header", saved.indexOf("<text:page-number")) > 0);
+        QVERIFY(saved.indexOf("raised bed") > saved.indexOf("<office:body>"));
+        doc.addPageNumbers(QStringLiteral("none"));
+        doc.settle(300);
+        std::tie(numbers, saved) = count(QStringLiteral("none"));
+        QCOMPARE(numbers, 0);
+        QVERIFY(saved.indexOf("raised bed") > saved.indexOf("<office:body>"));
+
+        // Typing afterwards goes into the text.
+        doc.typeText(QStringLiteral("Zed"));
+        doc.settle(200);
+        std::tie(numbers, saved) = count(QStringLiteral("typed"));
+        QVERIFY(saved.indexOf("Zed") > saved.indexOf("<office:body>"));
+    }
+
+    void pageNumbersLeaveAHeadersWords()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("letter.docx"))));
+        doc.command(QStringLiteral(".uno:InsertPageHeader"), {{QStringLiteral("PageStyle"), QString()}, {QStringLiteral("On"), true}});
+        doc.settle(200);
+        doc.typeText(QStringLiteral("Quarterly report"));
+        doc.settle(200);
+        doc.command(QStringLiteral(".uno:JumpToHeader"));
+        doc.settle(200);
+        doc.addPageNumbers(QStringLiteral("top-corner"));
+        doc.addPageNumbers(QStringLiteral("bottom-middle"));
+        doc.settle(300);
+        const QByteArray saved = flat(doc, QStringLiteral("kept"));
+        const int body = saved.indexOf("<office:body>");
+        QCOMPARE(int(saved.count("<text:page-number")), 2);
+        QVERIFY(saved.indexOf("Quarterly report") < body);
+        QVERIFY(saved.indexOf("raised bed") > body);
+        QVERIFY(saved.lastIndexOf("<text:page-number") < body);
     }
 
     void writesAPdfCopy()

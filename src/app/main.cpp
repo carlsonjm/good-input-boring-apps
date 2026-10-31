@@ -59,6 +59,9 @@ int main(int argc, char *argv[])
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,
                      [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
     engine.setInitialProperties({{QStringLiteral("kind"), kind}, {QStringLiteral("startFile"), file}});
+    // The screens are built into the program under qrc:/, which Qt 6.5 and
+    // later no longer search by themselves.
+    engine.addImportPath(QStringLiteral("qrc:/"));
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     engine.loadFromModule("co.goodinput.office", "DocsWindow");
 #else

@@ -13,9 +13,15 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Test 
 qt_standard_project_setup()
 
 # LibreOfficeKit is header-only: the program finds LibreOffice at run time.
+# The system's headers are used where it has them, otherwise the copy in
+# third_party/ (Arch, for one, ships them only with LibreOffice's SDK).
 find_path(LIBREOFFICEKIT_INCLUDE_DIR LibreOfficeKit/LibreOfficeKit.hxx
     PATHS /usr/include /usr/include/libreoffice /usr/lib/libreoffice/sdk/include
-    REQUIRED)
+    NO_CACHE)
+if(NOT LIBREOFFICEKIT_INCLUDE_DIR)
+    set(LIBREOFFICEKIT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libreofficekit)
+endif()
+message(STATUS "LibreOfficeKit headers: ${LIBREOFFICEKIT_INCLUDE_DIR}")
 
 # The engine (one LibreOffice per process, its own thread), the page view and
 # the screens, shared by the program and the tests.

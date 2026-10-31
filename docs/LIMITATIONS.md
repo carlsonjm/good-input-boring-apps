@@ -5,8 +5,9 @@
 - Docs line spacing offers Single, 1.5 and Double; the engine does not take
   1.15 from a command. Columns are not offered: the engine ignores the page
   column command.
-- Docs page numbers can be added but not taken away from Aa; undo or the
-  header and footer themselves do that.
+- Docs page numbers move or come off from Aa, but a number sitting beside
+  words of a person's own in a header or footer stays; and a header or
+  footer they leave empty stays on the page, empty.
 - Print writes a PDF and hands it to the desktop's PDF app, which prints.
 - Sheets has no chart and no borders: the engine opens its own chart wizard,
   which cannot be shown, and its border command needs more work. No fill

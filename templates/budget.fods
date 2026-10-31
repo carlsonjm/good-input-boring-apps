@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <office:document xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" xmlns:css3t="http://www.w3.org/TR/css3-text/" xmlns:grddl="http://www.w3.org/2003/g/data-view#" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xforms="http://www.w3.org/2002/xforms" xmlns:dom="http://www.w3.org/2001/xml-events" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:config="urn:oasis:names:tc:opendocument:xmlns:config:1.0" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:drawooo="http://openoffice.org/2010/draw" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:calcext="urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" xmlns:tableooo="http://openoffice.org/2009/table" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:rpt="http://openoffice.org/2005/report" xmlns:formx="urn:openoffice:names:experimental:ooxml-odf-interop:xmlns:form:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:field="urn:openoffice:names:experimental:ooo-ms-interop:xmlns:field:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.spreadsheet">
- <office:meta><dc:date>2026-10-30T18:17:41.049394926</dc:date><meta:editing-duration>PT1S</meta:editing-duration><meta:editing-cycles>1</meta:editing-cycles><meta:document-statistic meta:table-count="1" meta:cell-count="17" meta:object-count="0"/><meta:generator>LibreOffice/24.2.7.2$Linux_X86_64 LibreOffice_project/420$Build-2</meta:generator></office:meta>
+ <office:meta><dc:date>2026-10-31T00:43:13.747957828</dc:date><meta:editing-duration>PT1S</meta:editing-duration><meta:editing-cycles>1</meta:editing-cycles><meta:document-statistic meta:table-count="1" meta:cell-count="29" meta:object-count="0"/><meta:generator>LibreOffice/24.2.7.2$Linux_X86_64 LibreOffice_project/420$Build-2</meta:generator></office:meta>
  <office:settings>
   <config:config-item-set config:name="ooo:view-settings">
    <config:config-item config:name="VisibleAreaTop" config:type="int">0</config:config-item>
@@ -306,7 +306,7 @@
      <text:p><text:sheet-name>???</text:sheet-name><text:s/>(<text:title>???</text:title>)</text:p>
     </style:region-left>
     <style:region-right>
-     <text:p><text:date style:data-style-name="N2" text:date-value="2026-10-30">00/00/0000</text:date>, <text:time>00:00:00</text:time></text:p>
+     <text:p><text:date style:data-style-name="N2" text:date-value="2026-10-31">00/00/0000</text:date>, <text:time>00:00:00</text:time></text:p>
     </style:region-right>
    </style:header>
    <style:header-left style:display="false"/>
@@ -342,21 +342,51 @@
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
-     <table:table-cell table:number-columns-repeated="4"/>
+     <table:table-cell office:value-type="string" calcext:value-type="string">
+      <text:p>Rent</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="string" calcext:value-type="string">
+      <text:p>Home</text:p>
+     </table:table-cell>
+     <table:table-cell table:number-columns-repeated="2" office:value-type="currency" office:currency="USD" office:value="1200" calcext:value-type="currency">
+      <text:p>$1,200.00</text:p>
+     </table:table-cell>
      <table:table-cell table:formula="of:=[.D2]-[.C2]" office:value-type="currency" office:currency="USD" office:value="0" calcext:value-type="currency">
       <text:p>$0.00</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
-     <table:table-cell table:number-columns-repeated="4"/>
-     <table:table-cell table:formula="of:=[.D3]-[.C3]" office:value-type="currency" office:currency="USD" office:value="0" calcext:value-type="currency">
-      <text:p>$0.00</text:p>
+     <table:table-cell office:value-type="string" calcext:value-type="string">
+      <text:p>Food</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="string" calcext:value-type="string">
+      <text:p>Groceries</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="currency" office:currency="USD" office:value="310" calcext:value-type="currency">
+      <text:p>$310.00</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="currency" office:currency="USD" office:value="350" calcext:value-type="currency">
+      <text:p>$350.00</text:p>
+     </table:table-cell>
+     <table:table-cell table:formula="of:=[.D3]-[.C3]" office:value-type="currency" office:currency="USD" office:value="40" calcext:value-type="currency">
+      <text:p>$40.00</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
-     <table:table-cell table:number-columns-repeated="4"/>
-     <table:table-cell table:formula="of:=[.D4]-[.C4]" office:value-type="currency" office:currency="USD" office:value="0" calcext:value-type="currency">
-      <text:p>$0.00</text:p>
+     <table:table-cell office:value-type="string" calcext:value-type="string">
+      <text:p>Bus pass</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="string" calcext:value-type="string">
+      <text:p>Travel</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="currency" office:currency="USD" office:value="95" calcext:value-type="currency">
+      <text:p>$95.00</text:p>
+     </table:table-cell>
+     <table:table-cell office:value-type="currency" office:currency="USD" office:value="120" calcext:value-type="currency">
+      <text:p>$120.00</text:p>
+     </table:table-cell>
+     <table:table-cell table:formula="of:=[.D4]-[.C4]" office:value-type="currency" office:currency="USD" office:value="25" calcext:value-type="currency">
+      <text:p>$25.00</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -394,14 +424,14 @@
       <text:p>Total</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce2"/>
-     <table:table-cell table:style-name="ce4" table:formula="of:=SUM([.C2:.C9])" office:value-type="currency" office:currency="USD" office:value="0" calcext:value-type="currency">
-      <text:p>$0.00</text:p>
+     <table:table-cell table:style-name="ce4" table:formula="of:=SUM([.C2:.C9])" office:value-type="currency" office:currency="USD" office:value="1605" calcext:value-type="currency">
+      <text:p>$1,605.00</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="ce4" table:formula="of:=SUM([.D2:.D9])" office:value-type="currency" office:currency="USD" office:value="0" calcext:value-type="currency">
-      <text:p>$0.00</text:p>
+     <table:table-cell table:style-name="ce4" table:formula="of:=SUM([.D2:.D9])" office:value-type="currency" office:currency="USD" office:value="1670" calcext:value-type="currency">
+      <text:p>$1,670.00</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="ce4" table:formula="of:=SUM([.E2:.E9])" office:value-type="currency" office:currency="USD" office:value="0" calcext:value-type="currency">
-      <text:p>$0.00</text:p>
+     <table:table-cell table:style-name="ce4" table:formula="of:=SUM([.E2:.E9])" office:value-type="currency" office:currency="USD" office:value="65" calcext:value-type="currency">
+      <text:p>$65.00</text:p>
      </table:table-cell>
     </table:table-row>
    </table:table>

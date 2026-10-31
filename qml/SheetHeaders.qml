@@ -48,11 +48,11 @@ Item {
         columns = spans(data.columns || [], paper.scrollX)
         rows = spans(data.rows || [], paper.scrollY)
     }
-    // The engine gives where each one ends, in pixels at full size; the first
-    // entry is where the first one starts.
+    // The engine gives where each one ends, in its own pixels at the zoom the
+    // tiles are drawn at; the first entry is where the first one starts.
     function spans(list, scroll) {
         const out = []
-        const scale = 15 * paper.view.zoom
+        const scale = paper.view.pixelScale
         for (let i = 1; i < list.length; ++i) {
             const from = Number(list[i - 1].size) * scale - scroll
             const to = Number(list[i].size) * scale - scroll
@@ -69,6 +69,10 @@ Item {
         function onScrollYChanged() { soon.restart() }
         function onWidthChanged() { soon.restart() }
         function onHeightChanged() { soon.restart() }
+    }
+    Connections {
+        target: headers.paper ? headers.paper.view : null
+        function onPixelScaleChanged() { soon.restart() }
     }
     Connections {
         target: headers.document

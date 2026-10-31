@@ -173,12 +173,15 @@ ApplicationWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: Theme.surface
-            anchors.rightMargin: Theme.surface
+            // With Aa open the sheet steps aside for it, so the chosen cells
+            // stay in sight and nothing shows around the note's edges.
+            anchors.rightMargin: window.styleOpen ? cellSheet.width + 2 * Theme.comfortable : Theme.surface
             anchors.bottom: partTabs.top
             anchors.bottomMargin: Theme.standard
             Rectangle { anchors.fill: parent; color: "white" }
             SheetHeaders {
                 id: sheetHeaders
+                objectName: "sheetHeaders"
                 anchors.fill: parent
                 document: window.kind === "spreadsheet" ? doc : null
                 paper: paper
@@ -187,6 +190,7 @@ ApplicationWindow {
 
         Paper {
             id: paper
+            objectName: "paper"
             anchors.top: sheetFrame.visible ? sheetFrame.top : topLine.bottom
             anchors.topMargin: sheetFrame.visible ? sheetHeaders.band : 0
             anchors.left: sheetFrame.visible ? sheetFrame.left : slideStrip.visible ? slideStrip.right : parent.left
@@ -257,8 +261,7 @@ ApplicationWindow {
                             zoom: doc.size.width > 0 ? thumb.width / doc.size.width : 0.01
                             enabled: false
                         }
-                        Corners { anchors.fill: parent; radius: 8 }
-                        Rectangle { anchors.fill: parent; radius: 8; color: "transparent"; border.width: 1.5; border.color: Theme.desk }
+                        Corners { anchors.fill: parent; radius: 8; inset: 1.5 }
                     }
                 }
             }
@@ -419,6 +422,8 @@ ApplicationWindow {
         }
 
         CellSheet {
+            id: cellSheet
+            objectName: "cellSheet"
             visible: window.styleOpen && window.kind === "spreadsheet"
             anchors.right: parent.right
             anchors.rightMargin: Theme.comfortable

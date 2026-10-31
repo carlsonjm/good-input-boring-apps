@@ -74,6 +74,10 @@ int main(int argc, char **argv)
             row(doc, QStringLiteral("E%1").arg(r), {QStringLiteral("=D%1-C%1").arg(r)});
         }
         row(doc, "A10", {"Total", "", "=SUM(C2:C9)", "=SUM(D2:D9)", "=SUM(E2:E9)"});
+        // A few lines to show how it works; they are written over.
+        row(doc, "A2", {"Rent", "Home", "1200", "1200"});
+        row(doc, "A3", {"Food", "Groceries", "310", "350"});
+        row(doc, "A4", {"Bus pass", "Travel", "95", "120"});
         header(doc, "A1:E1", 0x9DD6F2);
         on(doc, "A10:E10", ".uno:Bold");
         on(doc, "C2:E10", ".uno:NumberFormatCurrency");
@@ -82,6 +86,7 @@ int main(int argc, char **argv)
     });
     make("tracker", "Tracker", [](OfficeDocument &doc) {
         row(doc, "A1", {"Date", "Task", "Done", "Notes"});
+        row(doc, "B2", {"Book the car in", "", "Garage on Elm Street"});
         header(doc, "A1:D1", 0xA8DDB5);
         on(doc, "A2:A60", ".uno:NumberFormatDate");
         on(doc, "A1:A60", ".uno:ColumnWidth", {{"ColumnWidth", 3000}});
@@ -95,6 +100,9 @@ int main(int argc, char **argv)
             row(doc, QStringLiteral("E%1").arg(r), {QStringLiteral("=IF(D%1=\"\";\"\";C%1*D%1)").arg(r)});
         }
         row(doc, "D16", {"Total", "=SUM(E2:E15)"});
+        row(doc, "A2", {"Milk", "Grocer", "2", "1.29"});
+        row(doc, "A3", {"Bread", "Bakery", "1", "3.5"});
+        row(doc, "A4", {"Apples", "Market", "6", "0.45"});
         header(doc, "A1:E1", 0xF7D774);
         on(doc, "D16:E16", ".uno:Bold");
         on(doc, "D2:E16", ".uno:NumberFormatCurrency");
