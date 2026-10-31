@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>co.goodinput.PDF</id>
+  <name>PDF</name>
+  <summary>Read, fill in, sign and highlight PDFs</summary>
+  <developer id="co.goodinput">
+    <name>Good Input</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <url type="homepage">https://goodinput.co</url>
+  <launchable type="desktop-id">co.goodinput.PDF.desktop</launchable>
+  <description>
+    <p>
+      A PDF is a piece of paper. Good Input PDF shows it as one, with nothing
+      in the way, and keeps the few things you do with paper close at hand.
+    </p>
+    <ul>
+      <li>Read, with every page at a glance and search across the whole file</li>
+      <li>Fill in forms, one field after the next</li>
+      <li>Sign with a signature you draw once and keep on your computer</li>
+      <li>Highlight in four colours that any PDF reader shows</li>
+    </ul>
+  </description>
+  <provides>
+    <mediatype>application/pdf</mediatype>
+  </provides>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-10-30" type="development">
+      <description>
+        <p>The first build: opening, pages, search, forms, highlights, signatures and saving.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -1,0 +1,60 @@
+# Flathub manifest, not yet built: the two source checksums are taken on the
+# first local flatpak-builder run (this repo's cloud sessions cannot reach
+# the download hosts; a GitHub runner can, or flatpak-builder prints the real
+# hash when one is wrong).
+# Built against KDE's runtime for Qt; Poppler is built here
+# with its Qt 6 layer, as Okular's own Flathub manifest does.
+app-id: co.goodinput.PDF
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+command: good-input-pdf
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # PDFs come through the file chooser portal and "Open with"; no home access.
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /lib/cmake
+  - '*.a'
+modules:
+  - name: openjpeg
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_CODEC=OFF
+    sources:
+      - type: archive
+        url: https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.2.tar.gz
+        sha256: CHECKSUM-NOT-YET-TAKEN  # take it on the first local flatpak-builder run
+
+  - name: poppler
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DENABLE_QT5=OFF
+      - -DENABLE_QT6=ON
+      - -DENABLE_GLIB=OFF
+      - -DENABLE_GOBJECT_INTROSPECTION=OFF
+      - -DENABLE_CPP=OFF
+      - -DENABLE_UTILS=OFF
+      - -DENABLE_BOOST=OFF
+      - -DENABLE_GPGME=OFF
+      - -DBUILD_GTK_TESTS=OFF
+      - -DBUILD_QT6_TESTS=OFF
+      - -DBUILD_CPP_TESTS=OFF
+      - -DBUILD_MANUAL_TESTS=OFF
+      - -DENABLE_LIBTIFF=OFF
+    sources:
+      - type: archive
+        url: https://poppler.freedesktop.org/poppler-24.02.0.tar.xz
+        sha256: CHECKSUM-NOT-YET-TAKEN  # take it on the first local flatpak-builder run
+
+  - name: good-input-pdf
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_TESTING=OFF
+    sources:
+      - type: dir
+        path: .

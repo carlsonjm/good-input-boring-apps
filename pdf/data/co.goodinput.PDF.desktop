@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=PDF
+GenericName=PDF reader
+Comment=Read, fill in, sign and highlight PDFs
+Exec=good-input-pdf %U
+Icon=co.goodinput.PDF
+Terminal=false
+Categories=Office;Viewer;
+MimeType=application/pdf;
+Keywords=pdf;form;sign;signature;highlight;reader;
+StartupWMClass=co.goodinput.PDF
