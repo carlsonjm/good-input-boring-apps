@@ -10,11 +10,11 @@ set_tests_properties(engine PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;HOME=${CMAKE_CURRENT_BINARY_DIR}/home;XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/home/.local/share;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/home/.config"
     TIMEOUT 180)
 
-# The screens as drawn, measured: once at 1x and once at the tablet's 1.25x.
+# The screens as drawn, measured: at 1x, at 1.25x and at the tablet's 1.75x.
 qt_add_executable(tst_screens tst_screens.cpp)
 target_link_libraries(tst_screens PRIVATE office-screens office-screensplugin Qt6::Test Qt6::QuickControls2)
 target_compile_definitions(tst_screens PRIVATE FIXTURES="${FIXTURES}")
-foreach(scale 1 1.25)
+foreach(scale 1 1.25 1.75)
     add_test(NAME screens-${scale} COMMAND tst_screens)
     set_tests_properties(screens-${scale} PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_SCALE_FACTOR=${scale};HOME=${CMAKE_CURRENT_BINARY_DIR}/home-${scale};XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/home-${scale}/.local/share;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/home-${scale}/.config"

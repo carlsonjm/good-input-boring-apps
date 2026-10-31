@@ -9,6 +9,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QGuiApplication>
 #include <QPalette>
 #include <QQmlApplicationEngine>
@@ -267,18 +268,11 @@ private Q_SLOTS:
                  qPrintable(QStringLiteral("sheet ends at %1, Aa starts at %2").arg(s.inPicture(headers).right()).arg(s.inPicture(note).left())));
     }
 
-    // A new deck's slide is white with an empty title: no filled shapes.
-    void newDeckIsEmpty()
+    // Share of a picture's points, in from an item's edges, that are a
+    // colour rather than white, grey or black.
+    static qreal colouredShare(const Screen &s, const QImage &picture, QQuickItem *item)
     {
-        Recent recent;
-        recent.setKind(QStringLiteral("presentation"));
-        const QUrl blank = recent.blankSource();
-        Screen s = open(QStringLiteral("presentation"), copyOf(blank.toLocalFile(), QStringLiteral("blank.fodp")));
-        QVERIFY(s.window);
-        const QImage picture = capture(s, QStringLiteral("slides-new"));
-        QQuickItem *paper = s.item("paper");
-        QVERIFY(paper);
-        const QRect area = s.inPicture(paper).toRect().adjusted(40, 40, -40, -40) & picture.rect();
+        const QRect area = s.inPicture(item).toRect().adjusted(40, 40, -40, -40) & picture.rect();
         int coloured = 0, all = 0;
         for (int y = area.top(); y < area.bottom(); y += 3) {
             for (int x = area.left(); x < area.right(); x += 3) {
@@ -289,7 +283,45 @@ private Q_SLOTS:
                 }
             }
         }
-        QVERIFY2(coloured < all / 200, qPrintable(QStringLiteral("%1 of %2 points coloured").arg(coloured).arg(all)));
+        return all ? qreal(coloured) / all : 1;
+    }
+
+    // Slides are white with their titles as plain words: no filled boxes
+    // behind a title or its text, on a new deck, on a slide added to it, or
+    // on a deck that names no fill of its own.
+    void slidesHaveNoFilledBoxes_data()
+    {
+        QTest::addColumn<QString>("file");
+        QTest::addColumn<bool>("addSlide");
+        QTest::newRow("new deck") << QString() << false;
+        QTest::newRow("new deck, new slide") << QString() << true;
+        QTest::newRow("deck.fodp") << QStringLiteral(FIXTURES "/deck.fodp") << false;
+        QTest::newRow("deck.pptx") << QStringLiteral(FIXTURES "/deck.pptx") << false;
+    }
+    void slidesHaveNoFilledBoxes()
+    {
+        QFETCH(QString, file);
+        QFETCH(bool, addSlide);
+        QString source = file;
+        if (source.isEmpty()) {
+            Recent recent;
+            recent.setKind(QStringLiteral("presentation"));
+            source = recent.blankSource().toLocalFile();
+        }
+        Screen s = open(QStringLiteral("presentation"), copyOf(source, QStringLiteral("filled.") + QFileInfo(source).suffix()));
+        QVERIFY(s.window);
+        if (addSlide) {
+            const int before = s.doc->parts();
+            s.doc->command(QStringLiteral(".uno:InsertPage"));
+            QVERIFY(QTest::qWaitFor([&] { return s.doc->parts() == before + 1; }, 10000));
+            s.doc->setPart(before);
+            QVERIFY(QTest::qWaitFor([&] { return s.doc->currentPart() == before; }, 10000));
+        }
+        const QImage picture = capture(s, QStringLiteral("slides-") + QString::fromLatin1(QTest::currentDataTag()).replace(QLatin1Char(' '), QLatin1Char('-')).remove(QLatin1Char(',')));
+        QQuickItem *paper = s.item("paper");
+        QVERIFY(paper);
+        const qreal share = colouredShare(s, picture, paper);
+        QVERIFY2(share < 0.005, qPrintable(QStringLiteral("%1% of the slide coloured").arg(share * 100, 0, 'f', 1)));
     }
 
     // Round a slide there is only desk: no line or sliver of the engine's
