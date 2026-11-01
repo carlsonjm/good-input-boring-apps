@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Slides
+Comment=Presentations, PowerPoint files included
+Exec=good-input-office --slides %U
+Icon=x-office-presentation
+Terminal=false
+Categories=Office;
+MimeType=application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.ms-powerpoint;application/vnd.oasis.opendocument.presentation;
+StartupWMClass=co.goodinput.Slides

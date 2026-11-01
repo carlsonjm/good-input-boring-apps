@@ -31,7 +31,8 @@ def stream(content, extra=b""):
 
 
 def text_page(lines):
-    ops = [b"BT /F1 12 Tf 72 720 Td 16 TL"]
+    # Each line moves down before it is shown, so the first lands at 720.
+    ops = [b"BT /F1 12 Tf 72 736 Td 16 TL"]
     for line in lines:
         ops.append(b"(" + line.encode("latin-1") + b") '")
     ops.append(b"ET")
