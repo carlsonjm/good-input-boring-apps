@@ -142,6 +142,19 @@ public:
     // corner ("bottom-middle", "bottom-corner", "top-corner"), and returns the
     // cursor to where it was.
     Q_INVOKABLE void addPageNumbers(const QString &where);
+    // Slides: every slide's boxes, in the order the engine steps through
+    // them with Tab, each as {kind, text}. kind is the box's place in the
+    // layout (title, subtitle, outline), "text" for a box of its own, or
+    // "other" for a picture, shape or chart.
+    Q_INVOKABLE QVariantList slideBoxes();
+    // Puts text in one box on a slide in place of what it held, a paragraph
+    // a line. One step to undo.
+    Q_INVOKABLE void setBoxText(int part, int box, const QString &text);
+    // Clears what was set on one box by hand, so it takes the deck's look.
+    Q_INVOKABLE void plainBox(int part, int box);
+    // How many steps there are to undo, and undoing back to that many.
+    Q_INVOKABLE int undoDepth();
+    Q_INVOKABLE void undoTo(int depth);
     // Writes a PDF of the document to a private temporary folder for the
     // desktop's PDF app to print, and returns where; empty if it failed.
     Q_INVOKABLE QUrl printCopy();
@@ -201,6 +214,7 @@ private:
     bool writeTo(const QUrl &target, const QString &format, const QByteArray &options);
     void mouse(int type, qreal x, qreal y, int count, int modifiers);
     void refreshShape();
+    void chooseBox(int part, int box);
 
     QUrl m_source;
     Status m_status = Empty;

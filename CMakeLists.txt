@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 include(GNUInstallDirs)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Test Widgets)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core DBus Gui Qml Quick QuickControls2 Test Widgets)
 qt_standard_project_setup()
 
 # LibreOfficeKit is header-only: the program finds LibreOffice at run time.
@@ -50,6 +50,7 @@ qt_add_qml_module(office-screens
         src/engine/OfficeDocument.cpp src/engine/OfficeDocument.h
         src/view/PageView.cpp src/view/PageView.h
         src/app/Recent.cpp src/app/Recent.h
+        src/app/SlideHelpers.cpp src/app/SlideHelpers.h
     QML_FILES
         qml/Theme.qml
         qml/Pill.qml
@@ -68,6 +69,8 @@ qt_add_qml_module(office-screens
         qml/SlideBar.qml
         qml/SlideSheet.qml
         qml/Presenter.qml
+        qml/HelperBar.qml
+        qml/HelperNote.qml
     RESOURCES
         qml/icons/chevron-left.svg
         qml/icons/undo-2.svg
@@ -91,6 +94,8 @@ qt_add_qml_module(office-screens
         qml/icons/align-right.svg
         qml/icons/layers.svg
         qml/icons/trash-2.svg
+        qml/icons/wand.svg
+        qml/icons/copy.svg
         qml/icons/ink/chevron-left.svg
         qml/icons/ink/undo-2.svg
         qml/icons/ink/redo-2.svg
@@ -113,6 +118,8 @@ qt_add_qml_module(office-screens
         qml/icons/ink/align-right.svg
         qml/icons/ink/layers.svg
         qml/icons/ink/trash-2.svg
+        qml/icons/ink/wand.svg
+        qml/icons/ink/copy.svg
 )
 # The ready-made sheets Sheets offers to start from (tools/make-templates.sh).
 qt_add_resources(office-screens "templates"
@@ -121,7 +128,7 @@ qt_add_resources(office-screens "templates"
     FILES templates/budget.fods templates/tracker.fods templates/shopping.fods templates/schedule.fods)
 
 target_include_directories(office-screens PUBLIC src/engine src/view src/app ${LIBREOFFICEKIT_INCLUDE_DIR})
-target_link_libraries(office-screens PUBLIC Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick ${CMAKE_DL_LIBS})
+target_link_libraries(office-screens PUBLIC Qt6::Core Qt6::DBus Qt6::Gui Qt6::Qml Qt6::Quick ${CMAKE_DL_LIBS})
 
 qt_add_executable(good-input-office src/app/main.cpp)
 target_link_libraries(good-input-office PRIVATE office-screens office-screensplugin Qt6::QuickControls2 Qt6::Widgets)

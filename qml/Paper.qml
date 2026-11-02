@@ -9,6 +9,8 @@ import co.goodinput.office
 Item {
     id: paper
 
+    // A tap on the page, after the engine has been told of it.
+    signal tapped()
     property OfficeDocument document
     // How the page meets the window: "width" fits the page's width (Docs),
     // "page" the whole page (Slides), "screen" edge to edge (presenting), and
@@ -106,6 +108,7 @@ Item {
                 const count = Math.min(3, tapCount)
                 paper.document.tap(p.x, p.y, count)
                 paper.focusPage()
+                paper.tapped()
             }
             onLongPressed: {
                 const p = view.toDocument(point.position.x, point.position.y)

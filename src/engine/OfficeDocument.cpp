@@ -16,6 +16,7 @@
 #include <QJsonObject>
 #include <QPointer>
 #include <QThread>
+#include <QXmlStreamReader>
 
 #include <cstdlib>
 #include <mutex>
@@ -588,6 +589,154 @@ static HeaderFooter readHeaderFooter(const QByteArray &flat)
     look(QStringLiteral("header"), found.header, found.headerOnlyNumbers);
     look(QStringLiteral("footer"), found.footer, found.footerOnlyNumbers);
     return found;
+}
+
+// A slide's boxes from a flat ODF presentation: each shape on the page in
+// order, which is the order Tab steps through them, and the slides' notes
+// left out.
+static QVariantList readSlides(const QByteArray &flat)
+{
+    static const QString draw = QStringLiteral("urn:oasis:names:tc:opendocument:xmlns:drawing:1.0");
+    static const QString text = QStringLiteral("urn:oasis:names:tc:opendocument:xmlns:text:1.0");
+    static const QString presentation = QStringLiteral("urn:oasis:names:tc:opendocument:xmlns:presentation:1.0");
+    QVariantList slides;
+    QXmlStreamReader xml(flat);
+    QVariantList boxes;
+    QVariantMap box;
+    QStringList paragraphs;
+    QString paragraph;
+    int depth = 0;
+    int pageDepth = -1;
+    int boxDepth = -1;
+    int paragraphDepth = -1;
+    bool hasText = false;
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (xml.isStartElement()) {
+            ++depth;
+            if (pageDepth < 0 && xml.namespaceUri() == draw && xml.name() == QLatin1String("page")) {
+                pageDepth = depth;
+                boxes.clear();
+            } else if (pageDepth > 0 && depth == pageDepth + 1 && xml.namespaceUri() == draw) {
+                boxDepth = depth;
+                box = {{QStringLiteral("kind"), xml.attributes().value(presentation, QStringLiteral("class")).toString()}};
+                paragraphs.clear();
+                hasText = false;
+            } else if (boxDepth > 0 && xml.namespaceUri() == draw && xml.name() == QLatin1String("text-box")) {
+                hasText = true;
+            } else if (boxDepth > 0 && paragraphDepth < 0 && xml.namespaceUri() == text
+                       && (xml.name() == QLatin1String("p") || xml.name() == QLatin1String("h"))) {
+                paragraphDepth = depth;
+                paragraph.clear();
+            } else if (paragraphDepth > 0 && xml.namespaceUri() == text
+                       && (xml.name() == QLatin1String("s") || xml.name() == QLatin1String("tab"))) {
+                paragraph += QLatin1Char(' ');
+            }
+        } else if (xml.isCharacters() && paragraphDepth > 0) {
+            paragraph += xml.text();
+        } else if (xml.isEndElement()) {
+            if (depth == paragraphDepth) {
+                paragraphs.append(paragraph.simplified());
+                paragraphDepth = -1;
+            } else if (depth == boxDepth) {
+                QString kind = box.value(QStringLiteral("kind")).toString();
+                if (kind.isEmpty() || (!hasText && kind != QLatin1String("title") && kind != QLatin1String("subtitle")
+                                       && kind != QLatin1String("outline"))) {
+                    kind = hasText ? QStringLiteral("text") : QStringLiteral("other");
+                }
+                box.insert(QStringLiteral("kind"), kind);
+                paragraphs.removeAll(QString());
+                box.insert(QStringLiteral("text"), paragraphs.join(QLatin1Char('\n')));
+                boxes.append(box);
+                boxDepth = -1;
+            } else if (depth == pageDepth) {
+                slides.append(QVariant(boxes));
+                pageDepth = -1;
+            }
+            --depth;
+        }
+    }
+    return slides;
+}
+
+QVariantList OfficeDocument::slideBoxes()
+{
+    if (m_kind != Presentation) {
+        return {};
+    }
+    settle(100);
+    const QString scratch = QDir::temp().filePath(QStringLiteral("good-input-office-%1.fodp").arg(quintptr(this)));
+    if (!saveCopy(QUrl::fromLocalFile(scratch), QStringLiteral("fodp"))) {
+        return {};
+    }
+    QFile file(scratch);
+    const QVariantList slides = file.open(QIODevice::ReadOnly) ? readSlides(file.readAll()) : QVariantList();
+    file.close();
+    file.remove();
+    return slides;
+}
+
+// Nothing chosen, then Tab steps to the box. Keys go to the engine in turn
+// with its own work, so each is let land before the next.
+void OfficeDocument::chooseBox(int part, int box)
+{
+    if (part != m_currentPart) {
+        setPart(part);
+        settle(200);
+    }
+    for (int i = 0; i < 2; ++i) {
+        pressKey(KeyEscape);
+        settle(60);
+    }
+    for (int i = 0; i <= box; ++i) {
+        pressKey(KeyTab);
+        settle(60);
+    }
+}
+
+void OfficeDocument::setBoxText(int part, int box, const QString &text)
+{
+    if (m_kind != Presentation) {
+        return;
+    }
+    chooseBox(part, box);
+    pressKey(KeyReturn);
+    settle(100);
+    command(QStringLiteral(".uno:SelectAll"));
+    settle(60);
+    pasteText(text);
+    settle(100);
+    for (int i = 0; i < 2; ++i) {
+        pressKey(KeyEscape);
+        settle(60);
+    }
+}
+
+void OfficeDocument::plainBox(int part, int box)
+{
+    if (m_kind != Presentation) {
+        return;
+    }
+    chooseBox(part, box);
+    command(QStringLiteral(".uno:SetDefault"));
+    settle(100);
+    pressKey(KeyEscape);
+    settle(60);
+}
+
+int OfficeDocument::undoDepth()
+{
+    return QJsonDocument::fromJson(commandValues(QStringLiteral(".uno:Undo")).toUtf8())
+        .object().value(QStringLiteral("actions")).toArray().size();
+}
+
+void OfficeDocument::undoTo(int depth)
+{
+    // Each step is checked, so a step the engine refuses can't loop forever.
+    for (int now = undoDepth(), last = -1; now > depth && now != last; last = now, now = undoDepth()) {
+        undo();
+        settle(60);
+    }
 }
 
 void OfficeDocument::addPageNumbers(const QString &where)

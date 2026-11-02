@@ -51,3 +51,15 @@ Rule: after every document is closed and the engine shut down, the program
 leaves with `_Exit`.
 Why: LibreOffice's clean-up at exit runs after its office is gone and crashes;
 by then everything is saved.
+
+## Helpers do one job and wait for Keep
+
+Rule: each Slides helper makes one change to the deck and leaves it waiting
+for Keep or Undo, saying who made it. Fit this slide and Make slides are
+Codex's, asked through Split Rock's broker on the person's tap with only the
+slide or their notes; Tidy the look is the app's own and needs no model.
+Without Split Rock the Codex helpers are not offered; without a Codex sign-in
+they open Codex's own sign-in through Split Rock, never one of ours.
+Why: a slide is compact information on an attractive page. A helper that
+takes over the deck would undo that; one that does a boring task and can be
+taken back keeps the person in charge.
