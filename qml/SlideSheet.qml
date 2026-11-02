@@ -3,14 +3,20 @@ import QtQuick.Controls.Basic
 import QtQuick.Dialogs
 import co.goodinput.office
 
-// Aa in Slides: how the slide is laid out, what can be put on it, and the
-// slide itself, in one note under its button.
+// Aa in Slides, in two sides. Layout and look: how the slide is laid out, what
+// can be put on it, and the slide itself. Helpers: slides made from notes, and
+// the chosen slide's helpers.
 Rectangle {
     id: sheet
 
     property OfficeDocument document
+    property SlideHelpers helpers
+    // "look" or "helpers".
+    property string side: "look"
 
     signal done()
+    // A Codex helper was tapped without a Codex sign-in.
+    signal needsSignIn()
 
     color: Theme.chrome
     radius: Theme.noteRadius
@@ -70,8 +76,23 @@ Rectangle {
         anchors.margins: Theme.comfortable
         spacing: 14
 
+        Rectangle {
+            width: parent.width
+            height: 48
+            radius: height / 2
+            color: Theme.desk
+            Row {
+                anchors.fill: parent
+                anchors.margins: Theme.tight
+                spacing: Theme.tight
+                Pill { width: (parent.width - Theme.tight) / 2; height: 40; label: qsTr("Layout and look"); selected: sheet.side === "look"; onClicked: sheet.side = "look" }
+                Pill { objectName: "helpersSide"; width: (parent.width - Theme.tight) / 2; height: 40; label: qsTr("Helpers"); selected: sheet.side === "helpers"; onClicked: { sheet.side = "helpers"; sheet.helpers.refresh() } }
+            }
+        }
+
         // The engine's AutoLayout numbers.
         Section {
+            visible: sheet.side === "look"
             label: qsTr("Layout")
             Layout { layout: 0; name: qsTr("Title"); centred: true }
             Layout { layout: 1; name: qsTr("Title and text"); title: true; body: true }
@@ -84,6 +105,7 @@ Rectangle {
         // With the Ctrl modifier the engine puts a new box in the middle of
         // the slide instead of waiting for it to be drawn.
         Section {
+            visible: sheet.side === "look"
             label: qsTr("Insert")
             Chip { label: qsTr("Text box"); onClicked: { sheet.document.command(".uno:Text", { "KeyModifier": 8192 }); sheet.done() } }
             Chip { label: qsTr("Picture"); onClicked: pictureDialog.open() }
@@ -92,10 +114,105 @@ Rectangle {
         }
 
         Section {
+            visible: sheet.side === "look"
             label: qsTr("This slide")
             Chip { label: qsTr("Duplicate"); onClicked: sheet.document.command(".uno:DuplicatePage") }
             Chip { label: qsTr("Delete"); enabled: sheet.document && sheet.document.parts > 1; onClicked: sheet.document.command(".uno:DeletePage") }
         }
+
+        // The Helpers side: slides from notes, by Codex, where Split Rock is here.
+        Column {
+            visible: sheet.side === "helpers" && sheet.helpers.available
+            width: parent.width
+            spacing: Theme.compact
+            Text { leftPadding: Theme.tight; text: qsTr("Make slides from this"); color: Theme.secondary; font.pixelSize: Theme.metaSize }
+            Rectangle {
+                width: parent.width
+                height: 150
+                radius: 14
+                color: Theme.desk
+                ScrollView {
+                    anchors.fill: parent
+                    anchors.margins: 6
+                    TextArea {
+                        id: notes
+                        objectName: "slideNotes"
+                        wrapMode: TextEdit.Wrap
+                        placeholderText: qsTr("Paste notes, an outline or a few paragraphs")
+                        color: Theme.text
+                        placeholderTextColor: Theme.secondary
+                        font.pixelSize: 15
+                        background: null
+                    }
+                }
+            }
+            Row {
+                spacing: 10
+                Chip { glyph: "file-text"; label: qsTr("Pick a Docs file"); onClicked: notesDialog.open() }
+                Pill {
+                    objectName: "makeSlides"
+                    accent: true
+                    implicitHeight: 40
+                    glyph: "wand"
+                    label: qsTr("Make slides")
+                    enabled: notes.text.trim().length > 0 && sheet.helpers.working.length === 0
+                    onClicked: {
+                        if (!sheet.helpers.codexReady) {
+                            sheet.needsSignIn()
+                            return
+                        }
+                        sheet.helpers.make(notes.text)
+                        notes.text = ""
+                        sheet.done()
+                    }
+                }
+            }
+            Text {
+                width: parent.width
+                leftPadding: Theme.tight
+                wrapMode: Text.Wrap
+                text: qsTr("Codex writes these. Only the notes above are sent, using your Codex sign-in.")
+                color: Theme.secondary
+                font.pixelSize: 12
+            }
+        }
+
+        Text {
+            visible: sheet.side === "helpers" && !sheet.helpers.available
+            width: parent.width
+            leftPadding: Theme.tight
+            wrapMode: Text.Wrap
+            text: qsTr("Make slides and Fit this slide use Codex through Split Rock, which isn't on this computer. Tidy the look works without it.")
+            color: Theme.secondary
+            font.pixelSize: Theme.metaSize
+        }
+
+        Section {
+            visible: sheet.side === "helpers"
+            label: qsTr("For this slide")
+            Chip {
+                visible: sheet.helpers.available
+                glyph: "wand"
+                label: qsTr("Fit this slide")
+                enabled: sheet.helpers.working.length === 0
+                onClicked: {
+                    if (!sheet.helpers.codexReady) {
+                        sheet.needsSignIn()
+                        return
+                    }
+                    sheet.helpers.fit()
+                    sheet.done()
+                }
+            }
+            Chip { glyph: "wand"; label: qsTr("Tidy the look"); enabled: sheet.helpers.working.length === 0; onClicked: { sheet.helpers.tidy(); sheet.done() } }
+        }
+    }
+
+    FileDialog {
+        id: notesDialog
+        title: qsTr("Choose a document")
+        nameFilters: [qsTr("Documents (*.odt *.fodt *.docx *.doc *.rtf *.txt *.md)")]
+        onAccepted: notes.text = sheet.helpers.wordsOf(selectedFile)
     }
 
     FileDialog {

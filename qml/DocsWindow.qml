@@ -41,6 +41,9 @@ ApplicationWindow {
 
     property bool styleOpen: false
     property bool finding: false
+    // Slides: the slide itself is chosen, from the strip, for its helpers.
+    property bool slideChosen: false
+    onStyleOpenChanged: if (styleOpen) slideChosen = false
 
     function startFinding() {
         styleOpen = false
@@ -199,6 +202,36 @@ ApplicationWindow {
             anchors.bottom: sheetFrame.visible ? sheetFrame.bottom : parent.bottom
             document: doc
             fit: window.kind === "spreadsheet" ? "actual" : window.kind === "presentation" ? "page" : "width"
+            onTapped: window.slideChosen = false
+        }
+
+        // Slides' helpers, for the chosen slide and for Make slides in Aa.
+        SlideHelpers {
+            id: helpers
+            document: window.kind === "presentation" ? doc : null
+        }
+
+        Connections {
+            target: doc
+            function onObjectChanged() { if (doc.hasObject) window.slideChosen = false }
+            function onCursorChanged() { if (doc.cursorVisible) window.slideChosen = false }
+            function onSourceChanged() { window.slideChosen = false }
+        }
+
+        // The chosen slide, ringed as its thumbnail is.
+        Rectangle {
+            id: slideRing
+            objectName: "slideRing"
+            readonly property rect slide: paper.viewRect(Qt.rect(0, 0, doc.size.width, doc.size.height))
+            visible: window.kind === "presentation" && window.slideChosen && !presenter.running
+            x: paper.x + slide.x - 6
+            y: paper.y + slide.y - 6
+            width: slide.width + 12
+            height: slide.height + 12
+            radius: Theme.paperRadius + 6
+            color: "transparent"
+            border.width: 3
+            border.color: Theme.accent
         }
 
         Corners {
@@ -209,6 +242,7 @@ ApplicationWindow {
         // Slides: every slide down the side, the current one ringed.
         ListView {
             id: slideStrip
+            objectName: "slideStrip"
             visible: window.kind === "presentation" && doc.parts > 0
             anchors.top: topLine.bottom
             anchors.topMargin: Theme.compact
@@ -228,7 +262,12 @@ ApplicationWindow {
                 readonly property bool current: doc.currentPart === index
                 width: 184
                 height: thumb.height
-                onClicked: doc.setPart(index)
+                onClicked: {
+                    doc.setPart(index)
+                    window.styleOpen = false
+                    window.slideChosen = true
+                    helpers.refresh()
+                }
                 contentItem: Item {
                     Text {
                         text: slideButton.index + 1
@@ -307,6 +346,30 @@ ApplicationWindow {
                 return below + height < parent.height - Theme.comfortable ? below : Math.max(topLine.height, paper.y + box.y - height - 20)
             }
             onDone: paper.focusPage()
+        }
+
+        HelperBar {
+            id: helperBar
+            objectName: "helperBar"
+            visible: window.kind === "presentation" && window.slideChosen && !doc.hasObject && !window.styleOpen && !presenter.running && !helperNote.showing
+            document: doc
+            helpers: helpers
+            x: Math.max(Theme.comfortable, Math.min(parent.width - width - Theme.comfortable, slideRing.x + slideRing.width / 2 - width / 2))
+            y: Math.min(parent.height - height - Theme.comfortable, slideRing.y + slideRing.height + 14)
+            onDone: window.slideChosen = false
+            onNeedsSignIn: helperNote.signingIn = true
+        }
+
+        // A helper's change waiting for Keep or Undo, near the slide's foot.
+        HelperNote {
+            id: helperNote
+            objectName: "helperNote"
+            visible: window.kind === "presentation" && showing && !presenter.running
+            helpers: helpers
+            width: Math.min(implicitWidth, parent.width - 2 * Theme.comfortable)
+            x: Math.max(Theme.comfortable, Math.min(parent.width - width - Theme.comfortable, paper.x + slideRing.slide.x + slideRing.slide.width / 2 - width / 2))
+            y: Math.min(parent.height - height - Theme.comfortable, paper.y + slideRing.slide.y + slideRing.slide.height - height / 2)
+            onClosed: paper.focusPage()
         }
 
         // Sheets: the sheets of the file as pills along the bottom, and what
@@ -413,12 +476,16 @@ ApplicationWindow {
         }
 
         SlideSheet {
+            id: slideSheet
+            objectName: "slideSheet"
             visible: window.styleOpen && window.kind === "presentation"
             anchors.right: parent.right
             anchors.rightMargin: Theme.comfortable
             y: topLine.height
             document: doc
+            helpers: helpers
             onDone: { window.styleOpen = false; paper.focusPage() }
+            onNeedsSignIn: { window.styleOpen = false; helperNote.signingIn = true }
         }
 
         CellSheet {

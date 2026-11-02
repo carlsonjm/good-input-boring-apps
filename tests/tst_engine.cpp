@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "OfficeDocument.h"
 #include "Recent.h"
+#include "SlideHelpers.h"
 
 #include <QFile>
 #include <QGuiApplication>
@@ -47,6 +48,17 @@ private:
     {
         const QString path = m_dir.filePath(name + QStringLiteral(".fodt"));
         if (!doc.saveCopy(QUrl::fromLocalFile(path), QStringLiteral("fodt"))) {
+            return {};
+        }
+        QFile file(path);
+        file.open(QIODevice::ReadOnly);
+        return file.readAll();
+    }
+
+    QByteArray flatSlides(OfficeDocument &doc, const QString &name)
+    {
+        const QString path = m_dir.filePath(name + QStringLiteral(".fodp"));
+        if (!doc.saveCopy(QUrl::fromLocalFile(path), QStringLiteral("fodp"))) {
             return {};
         }
         QFile file(path);
@@ -189,6 +201,122 @@ private Q_SLOTS:
             QCOMPARE(doc.parts(), 1);
         }
         QVERIFY(recent.newDocumentTarget(QStringLiteral("Monthly budget")).fileName().startsWith(QStringLiteral("Monthly budget")));
+    }
+
+    // Each slide's boxes in Tab order, with their words.
+    void slideBoxesReadTheDeck()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("deck.fodp"))));
+        const QVariantList slides = doc.slideBoxes();
+        QCOMPARE(slides.size(), 3);
+        const QVariantList plan = slides.at(1).toList();
+        QCOMPARE(plan.size(), 2);
+        QCOMPARE(plan.at(0).toMap().value(QStringLiteral("kind")).toString(), QStringLiteral("title"));
+        QCOMPARE(plan.at(0).toMap().value(QStringLiteral("text")).toString(), QStringLiteral("The plan"));
+        QCOMPARE(plan.at(1).toMap().value(QStringLiteral("kind")).toString(), QStringLiteral("outline"));
+        QCOMPARE(plan.at(1).toMap().value(QStringLiteral("text")).toString(),
+                 QStringLiteral("Bake sale on Saturday\nRaffle at the game"));
+        QCOMPARE(SlideHelpers::layoutOf(plan), 1);
+    }
+
+    // Fit this slide: Codex's slide goes in the boxes of the one asked
+    // about, a second slide follows it, and Undo takes all of it back.
+    void fittedSlideReplacesTheWords()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("deck.fodp"))));
+        doc.setPart(1);
+        doc.settle(200);
+        SlideHelpers helpers;
+        helpers.setDocument(&doc);
+        const QVariantList slides{
+            QVariantMap{{QStringLiteral("layout"), QStringLiteral("text")}, {QStringLiteral("title"), QStringLiteral("Our plan")},
+                        {QStringLiteral("lines"), QStringList{QStringLiteral("Bake sale, Saturday"), QStringLiteral("Raffle")}}},
+            QVariantMap{{QStringLiteral("layout"), QStringLiteral("text")}, {QStringLiteral("title"), QStringLiteral("More")},
+                        {QStringLiteral("lines"), QStringList{QStringLiteral("Car wash")}}}};
+        helpers.apply(QStringLiteral("fit"), slides, QStringLiteral("Shorter, same points."));
+        QCOMPARE(helpers.result().value(QStringLiteral("who")).toString(), QStringLiteral("codex"));
+        QCOMPARE(helpers.result().value(QStringLiteral("line")).toString(), QStringLiteral("Shorter, same points."));
+        QCOMPARE(doc.parts(), 4);
+        const QVariantList after = doc.slideBoxes();
+        QCOMPARE(after.at(1).toList().at(0).toMap().value(QStringLiteral("text")).toString(), QStringLiteral("Our plan"));
+        QCOMPARE(after.at(1).toList().at(1).toMap().value(QStringLiteral("text")).toString(),
+                 QStringLiteral("Bake sale, Saturday\nRaffle"));
+        QCOMPARE(after.at(2).toList().at(0).toMap().value(QStringLiteral("text")).toString(), QStringLiteral("More"));
+        QCOMPARE(after.at(3).toList().at(0).toMap().value(QStringLiteral("text")).toString(), QStringLiteral("Thank you"));
+
+        helpers.undo();
+        QCOMPARE(doc.parts(), 3);
+        QCOMPARE(doc.slideBoxes().at(1).toList().at(0).toMap().value(QStringLiteral("text")).toString(), QStringLiteral("The plan"));
+        QVERIFY(helpers.result().isEmpty());
+    }
+
+    // Make slides on a new deck: its empty slide becomes the first, the
+    // rest follow, and a number is a title slide with the figure large.
+    void madeSlidesFillANewDeck()
+    {
+        Recent recent;
+        recent.setKind(QStringLiteral("presentation"));
+        const QString blank = m_dir.filePath(QStringLiteral("made.fodp"));
+        QFile::remove(blank);
+        QVERIFY(QFile::copy(recent.blankSource().toLocalFile(), blank));
+        QFile::setPermissions(blank, QFile::ReadOwner | QFile::WriteOwner);
+        OfficeDocument doc;
+        QVERIFY(open(doc, QUrl::fromLocalFile(blank)));
+        SlideHelpers helpers;
+        helpers.setDocument(&doc);
+        const QVariantList slides{
+            QVariantMap{{QStringLiteral("layout"), QStringLiteral("title")}, {QStringLiteral("title"), QStringLiteral("Two events")},
+                        {QStringLiteral("lines"), QStringList{QStringLiteral("Spring 2027")}}},
+            QVariantMap{{QStringLiteral("layout"), QStringLiteral("text")}, {QStringLiteral("title"), QStringLiteral("Bake sale")},
+                        {QStringLiteral("lines"), QStringList{QStringLiteral("Sat 14 March"), QStringLiteral("Club hall")}}},
+            QVariantMap{{QStringLiteral("layout"), QStringLiteral("number")}, {QStringLiteral("title"), QStringLiteral("$6,000")},
+                        {QStringLiteral("lines"), QStringList{QStringLiteral("for a new four")}}}};
+        helpers.apply(QStringLiteral("make"), slides, QStringLiteral("Three slides."));
+        QVERIFY(helpers.result().value(QStringLiteral("many")).toBool());
+        QCOMPARE(doc.parts(), 3);
+        const QVariantList deck = doc.slideBoxes();
+        const auto words = [&](int slide) {
+            QStringList all;
+            for (const QVariant &box : deck.at(slide).toList()) {
+                all.append(box.toMap().value(QStringLiteral("kind")).toString() + QLatin1Char(':')
+                           + box.toMap().value(QStringLiteral("text")).toString());
+            }
+            return all.join(QLatin1Char('|'));
+        };
+        QCOMPARE(words(0), QStringLiteral("title:Two events|subtitle:Spring 2027"));
+        QCOMPARE(words(1), QStringLiteral("title:Bake sale|outline:Sat 14 March\nClub hall"));
+        QCOMPARE(words(2), QStringLiteral("title:$6,000|subtitle:for a new four"));
+
+        helpers.undo();
+        QCOMPARE(doc.parts(), 1);
+    }
+
+    // Tidy the look: what was set on a box by hand goes, and Undo brings
+    // it back.
+    void tidyClearsWhatWasSetByHand()
+    {
+        OfficeDocument doc;
+        QVERIFY(open(doc, copyOf(QStringLiteral("deck.fodp"))));
+        doc.setPart(1);
+        doc.settle(200);
+        doc.pressKey(OfficeDocument::KeyTab);
+        doc.settle(100);
+        doc.command(QStringLiteral(".uno:Bold"));
+        doc.settle(200);
+        doc.pressKey(OfficeDocument::KeyEscape);
+        doc.settle(100);
+        // The deck's own styles may be bold too; what was set by hand adds to them.
+        const auto bolds = [&](const QString &name) { return flatSlides(doc, name).count("fo:font-weight=\"bold\""); };
+        const qsizetype bold = bolds(QStringLiteral("bold"));
+        SlideHelpers helpers;
+        helpers.setDocument(&doc);
+        helpers.tidy();
+        QCOMPARE(helpers.result().value(QStringLiteral("who")).toString(), QStringLiteral("app"));
+        QVERIFY(bolds(QStringLiteral("tidied")) < bold);
+        helpers.undo();
+        QCOMPARE(bolds(QStringLiteral("untidied")), bold);
     }
 
     void presentationHasSlides()

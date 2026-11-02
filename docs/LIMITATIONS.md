@@ -18,6 +18,10 @@
   notes are not shown while editing or presenting.
 - Slides moves and resizes a chosen box only with a mouse drag; the pearls at
   its corners do not drag yet.
+- Fit this slide rewrites a slide's title and its first text box only; other
+  boxes, pictures and charts on it stay as they are. Make slides puts new slides after the
+  current one and does not yet offer speaker notes, since the app has no
+  notes line.
 - The presenter's view on a second screen has not been tried on a real
   second screen.
 - Link in the selection bar uses the engine's link command; it may not take

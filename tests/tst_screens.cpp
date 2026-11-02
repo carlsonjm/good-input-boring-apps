@@ -362,6 +362,52 @@ private Q_SLOTS:
         QVERIFY2(stray == 0, qPrintable(QStringLiteral("%1 stray pixels round the slide").arg(stray)));
     }
 
+    // Tapping a slide in the strip chooses the slide: it is ringed and its
+    // helpers float under it. Without Split Rock only Tidy the look is
+    // offered, and its change waits for Keep or Undo, said to be the app's.
+    void choosingASlideOffersItsHelpers()
+    {
+        Screen s = open(QStringLiteral("presentation"), copyOf(QStringLiteral(FIXTURES "/deck.fodp"), QStringLiteral("helpers.fodp")));
+        QVERIFY(s.window);
+        QQuickItem *strip = s.item("slideStrip");
+        QQuickItem *bar = s.item("helperBar");
+        QQuickItem *ring = s.item("slideRing");
+        QQuickItem *note = s.item("helperNote");
+        QVERIFY(strip && bar && ring && note);
+        QVERIFY(!bar->isVisible());
+        const QPointF first = strip->mapToScene(QPointF(strip->width() / 2, 40));
+        QTest::mouseClick(s.window, Qt::LeftButton, {}, first.toPoint());
+        QVERIFY(QTest::qWaitFor([&] { return bar->isVisible(); }, 5000));
+        QVERIFY(ring->isVisible());
+        // Under the slide, and inside the window.
+        QVERIFY(bar->y() > ring->y() + ring->height() / 2);
+        QVERIFY(bar->y() + bar->height() <= s.window->height());
+        capture(s, QStringLiteral("slides-chosen"));
+
+        QMetaObject::invokeMethod(note->property("helpers").value<QObject *>(), "tidy");
+        QVERIFY(QTest::qWaitFor([&] { return note->isVisible(); }, 10000));
+        QCOMPARE(note->property("detail").toString(), QStringLiteral("Done by Slides itself"));
+        QVERIFY(!bar->isVisible());
+        capture(s, QStringLiteral("slides-tidied"));
+
+        // Keep puts the note away; opening Aa puts the choice down.
+        QMetaObject::invokeMethod(note->property("helpers").value<QObject *>(), "keep");
+        QVERIFY(QTest::qWaitFor([&] { return !note->isVisible(); }, 5000));
+        s.window->setProperty("slideChosen", true);
+        QVERIFY(bar->isVisible());
+        s.window->setProperty("styleOpen", true);
+        QVERIFY(!bar->isVisible());
+        QVERIFY(!s.window->property("slideChosen").toBool());
+
+        // Aa's Helpers side says plainly what needs Split Rock.
+        QQuickItem *sheet = s.item("slideSheet");
+        QVERIFY(sheet && sheet->isVisible());
+        sheet->setProperty("side", QStringLiteral("helpers"));
+        QQuickItem *make = s.item("makeSlides");
+        QVERIFY(make && !make->isVisible());
+        capture(s, QStringLiteral("slides-helpers-side"));
+    }
+
     // With a dark colour scheme the desk is dark.
     void followsADarkScheme()
     {
