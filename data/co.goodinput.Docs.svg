@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Good Input Docs: a page of text on a blue tile. -->
+  <g transform="translate(128 128) scale(0.9333) translate(-128 -128)">
+  <defs>
+  <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#4C8DF6"/>
+  <stop offset="1" stop-color="#2563D8"/>
+  </linearGradient>
+  <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF"/>
+  <stop offset=".55" stop-color="#F4F4FA"/>
+  <stop offset="1" stop-color="#DCDCE4"/>
+  </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="37.5" fill="url(#tile)"/>
+  <path d="M92 52h52l36 36v104a16 16 0 0 1-16 16H92a16 16 0 0 1-16-16V68a16 16 0 0 1 16-16z" fill="url(#mark)"/>
+  <path d="M144 52v24a12 12 0 0 0 12 12h24" fill="#2563D8" opacity=".25"/>
+  <path d="M100 116H156" stroke="#2563D8" stroke-width="11" stroke-linecap="round"/>
+  <path d="M100 138H156" stroke="#2563D8" stroke-width="11" stroke-linecap="round"/>
+  <path d="M100 160H156" stroke="#2563D8" stroke-width="11" stroke-linecap="round"/>
+  <path d="M100 182H134" stroke="#2563D8" stroke-width="11" stroke-linecap="round"/>
+  </g>
+</svg>

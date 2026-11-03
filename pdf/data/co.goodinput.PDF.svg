@@ -1,9 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- A sheet of paper on the Piano ground, its corner folded; the PDF Basic's mark. -->
-  <rect x="8" y="8" width="112" height="112" rx="26" fill="#141414"/>
-  <path d="M40 26h34l18 18v50a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="#F8F8FF"/>
-  <path d="M74 26v12a6 6 0 0 0 6 6h12" fill="#D6D6DE"/>
-  <rect x="42" y="58" width="36" height="5" rx="2.5" fill="#FFD60A"/>
-  <rect x="42" y="70" width="40" height="4" rx="2" fill="#A8A8B0"/>
-  <rect x="42" y="80" width="28" height="4" rx="2" fill="#A8A8B0"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Good Input PDF: a page with a highlighted line on a red tile. -->
+  <g transform="translate(128 128) scale(0.9333) translate(-128 -128)">
+  <defs>
+  <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#EE5E62"/>
+  <stop offset="1" stop-color="#C9343D"/>
+  </linearGradient>
+  <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF"/>
+  <stop offset=".55" stop-color="#F4F4FA"/>
+  <stop offset="1" stop-color="#DCDCE4"/>
+  </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="37.5" fill="url(#tile)"/>
+  <path d="M92 52h52l36 36v104a16 16 0 0 1-16 16H92a16 16 0 0 1-16-16V68a16 16 0 0 1 16-16z" fill="url(#mark)"/>
+  <path d="M144 52v24a12 12 0 0 0 12 12h24" fill="#C9343D" opacity=".25"/>
+  <path d="M100 124H150" stroke="#FFD60A" stroke-width="16" stroke-linecap="round"/>
+  <path d="M100 152H156" stroke="#C9343D" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+  <path d="M100 176H138" stroke="#C9343D" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+  </g>
 </svg>

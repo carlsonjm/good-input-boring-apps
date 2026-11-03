@@ -131,6 +131,11 @@ install(FILES
     data/co.goodinput.Sheets.desktop
     data/co.goodinput.Slides.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+install(FILES
+    data/co.goodinput.Docs.svg
+    data/co.goodinput.Sheets.svg
+    data/co.goodinput.Slides.svg
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

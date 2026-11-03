@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Good Input Sheets: a page with a table on a green tile. -->
+  <g transform="translate(128 128) scale(0.9333) translate(-128 -128)">
+  <defs>
+  <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#34BC7E"/>
+  <stop offset="1" stop-color="#1B8A56"/>
+  </linearGradient>
+  <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF"/>
+  <stop offset=".55" stop-color="#F4F4FA"/>
+  <stop offset="1" stop-color="#DCDCE4"/>
+  </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="37.5" fill="url(#tile)"/>
+  <path d="M92 52h52l36 36v104a16 16 0 0 1-16 16H92a16 16 0 0 1-16-16V68a16 16 0 0 1 16-16z" fill="url(#mark)"/>
+  <path d="M144 52v24a12 12 0 0 0 12 12h24" fill="#1B8A56" opacity=".25"/>
+  <rect x="94" y="104" width="34" height="22" rx="5" fill="#1B8A56" opacity="1"/>
+  <rect x="134" y="104" width="34" height="22" rx="5" fill="#1B8A56" opacity="1"/>
+  <rect x="94" y="132" width="34" height="22" rx="5" fill="#1B8A56" opacity="0.55"/>
+  <rect x="134" y="132" width="34" height="22" rx="5" fill="#1B8A56" opacity="0.55"/>
+  <rect x="94" y="160" width="34" height="22" rx="5" fill="#1B8A56" opacity="0.55"/>
+  <rect x="134" y="160" width="34" height="22" rx="5" fill="#1B8A56" opacity="0.55"/>
+  </g>
+</svg>

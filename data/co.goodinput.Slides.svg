@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Good Input Slides: a slide on a stand on an orange tile. -->
+  <g transform="translate(128 128) scale(0.9333) translate(-128 -128)">
+  <defs>
+  <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#F7AE45"/>
+  <stop offset="1" stop-color="#DE7F1C"/>
+  </linearGradient>
+  <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF"/>
+  <stop offset=".55" stop-color="#F4F4FA"/>
+  <stop offset="1" stop-color="#DCDCE4"/>
+  </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="37.5" fill="url(#tile)"/>
+  <rect x="52" y="64" width="152" height="104" rx="16" fill="url(#mark)"/>
+  <path d="M128 168v30M100 200h56" stroke="url(#mark)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M76 92H132" stroke="#DE7F1C" stroke-width="11" stroke-linecap="round"/>
+  <rect x="136" y="124" width="18" height="20" rx="5" fill="#DE7F1C" opacity="0.55"/>
+  <rect x="160" y="108" width="18" height="36" rx="5" fill="#DE7F1C" opacity="0.8"/>
+  <rect x="76" y="114" width="44" height="30" rx="7" fill="#DE7F1C" opacity=".55"/>
+  <rect x="176" y="92" width="0" height="0"/>
+  </g>
+</svg>
